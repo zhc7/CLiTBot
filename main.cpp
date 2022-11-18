@@ -54,14 +54,15 @@ enum OpType {
     LIT,
     CALL
 }; // TL为左转，TR为右转，MOV为向前行走，JMP为跳跃，LIT为点亮灯；
-   
-// 使用CALL表示调用MAIN，CALL + 1表示调用P1，以此类推。
+   // 使用CALL表示调用MAIN，CALL + 1表示调用P1，以此类推。
+
 // 过程类型
 struct Proc {
     OpType ops[MAX_OPS];
     // 指令记录，MAX_OPS为合理常数
     int count; // 有效指令数
 };
+
 // 指令序列类型
 struct OpSeq {
     // 过程记录，MAX_PROCS为合理常数
@@ -92,7 +93,7 @@ struct Game {
     char map_name[MAX_PATH_LEN]; // 当前地图的文件路径名
     Map map_init;                // 地图初始状态 
     Map map_run;                 // 指令执行过程中的地图状态 
-    
+
     // 自动保存的文件路径名，MAX_PATH_LEN为合理常数
     char save_path[MAX_PATH_LEN];
     int auto_save_id; // 自动保存标识
