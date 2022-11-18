@@ -101,6 +101,135 @@ struct Game {
 };
 Game game; // 全局唯一的Game变量
 
+
+// API Declaration
+
+// part 1 - Graphics
+// WIP
+
+// part 2 - Execution
+// 执行结果枚举类型 
+enum ResultType { 
+    LIGHT, // 结束条件1，点亮了全部灯，干得漂亮 
+    LIMIT, // 结束条件2，到达操作数上限 
+    DARK // 结束条件3，MAIN过程执行完毕 
+}; 
+
+// 执行结果类型 
+struct Result { 
+    int steps; // 记录总步数 
+    ResultType result; // 用enum记录结束原因 
+}; 
+Result robot_run(const char* path);
+
+// part 3 - User Interface
+void warn(/*WIP*/); //实现命令行警告
+// WIP
+
+
+// API Implementation
+
+// part 1 - Graphics
+// WIP
+
+// part 2 - Execution
+struct Frame {
+    Proc* p;
+    int c = 0;
+    Frame* next = nullptr;
+    Frame* prev = nullptr;
+    Frame (Proc* p) : p(p) {};
+};
+
+struct Stack {
+    Frame* head;
+    Frame* current;
+    Stack (Proc* main) {
+        head = new Frame(main);
+        current = head;
+    }
+
+    void push (Proc* p) {
+        current -> next = new Frame(p);
+        current = current -> next;
+    }
+
+    Proc* pop() {
+        current = current -> prev;
+        return current -> p;
+    }
+
+    void call() {
+        
+    }
+};
+
+OpSeq& parse(const char* path);
+
+Result robot_run(const char* path) {
+    game.auto_save_id = 0;
+    game.map_run = game.map_init;
+    OpSeq seq = parse(path);
+    Proc main = seq.procs[0];
+    Stack stack(&main);
+    Frame* f = stack.current;
+    while (true) {
+        for (int i = f->c; i < f->p->count; i++) {
+            Robot& r = game.map_run.robot;
+            switch (f->p->ops[i]) {
+            case TL:
+                game.map_run.robot.dir = (Direction)((r.dir + 1) % 4);
+                break;
+            
+            case TR:
+                game.map_run.robot.dir = (Direction)((r.dir + 3) % 4);
+                break;
+            
+            case MOV:
+                int x = r.pos.x;
+                int y = r.pos.y;
+                x += (r.dir - 1) * ((r.dir + 1) % 2);
+                y += -(r.dir - 2) * (r.dir % 2);
+                if (x < 0 or y < 0 or x >= game.map_run.col or y >= game.map_run.row or 
+                    game.map_run.cells[y][x].height != game.map_run.cells[r.pos.y][r.pos.x].height) {
+                    warn();
+                    break;
+                }
+                r.pos.x = x;
+                r.pos.y = y;
+                break;
+            
+            case JMP:
+                int x = r.pos.x;
+                int y = r.pos.y;
+                x += (r.dir - 1) * ((r.dir + 1) % 2);
+                y += -(r.dir - 2) * (r.dir % 2);
+                if (x < 0 or y < 0 or x >= game.map_run.col or y >= game.map_run.row or 
+                    [](int x){return x > 0 ? x:-x;}(game.map_run.cells[y][x].height - game.map_run.cells[r.pos.y][r.pos.x].height) != 1) {
+                    warn();
+                    break;
+                }
+                r.pos.x = x;
+                r.pos.y = y;
+                break;
+
+            case LIT:
+
+            default:
+                break;
+            }
+        }
+    }
+    for(int i = 0; i < seq.count; i++) {
+        Proc p = seq.procs[i];
+
+    }
+}
+
+// part 3 - User Interface
+// WIP
+
+
 int main() {
     return 0;
 }
