@@ -20,10 +20,10 @@ struct Position {
 
 // 方向枚举类型，可用来表达机器人朝向，只有四种取值
 enum Direction {
-    UP,
-    DOWN,
-    LEFT,
-    RIGHT
+    LEFT,   // 左前方
+    DOWN,   // 左后方
+    RIGHT,  // 右后方
+    UP,     // 右前方
 };
 
 // 机器人类型
