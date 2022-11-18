@@ -90,9 +90,9 @@ struct Map {
 // 游戏状态类型
 struct Game {
     char map_name[MAX_PATH_LEN]; // 当前地图的文件路径名
-    Map map_init;                // 地图初始状态 Map map_run; 
+    Map map_init;                // 地图初始状态 
+    Map map_run;                 // 指令执行过程中的地图状态 
     
-    // 指令执行过程中的地图状态 
     // 自动保存的文件路径名，MAX_PATH_LEN为合理常数
     char save_path[MAX_PATH_LEN];
     int auto_save_id; // 自动保存标识
