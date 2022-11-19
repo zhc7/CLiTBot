@@ -105,6 +105,7 @@ Game game; // 全局唯一的Game变量
 // API Declaration
 
 // part 1 - Graphics
+void auto_save();
 // WIP
 
 // part 2 - Execution
@@ -121,6 +122,9 @@ struct Result {
     ResultType result; // 用enum记录结束原因 
 }; 
 Result robot_run(const char* path);
+struct Frame;
+struct Stack;
+OpSeq& parse(const char* path);
 
 // part 3 - User Interface
 void warn(/*WIP*/); //实现命令行警告
@@ -164,7 +168,9 @@ struct Stack {
     }
 };
 
-OpSeq& parse(const char* path);
+OpSeq& parse(const char* path) {
+    // WIP
+}
 
 Result robot_run(const char* path) {
     game.auto_save_id = 0;
