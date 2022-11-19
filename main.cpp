@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 using namespace std;
 
 
@@ -162,14 +163,52 @@ struct Stack {
         current = current -> prev;
         return current;
     }
-
-    void call() {
-        
-    }
 };
 
 OpSeq& parse(const char* path) {
-    // WIP
+    ifstream fin(path);
+    OpSeq seq;
+    int t;
+    int n;
+    fin >> t;
+    seq.count = t;
+    char c[5];
+    for (int i = 0; i < t; i++) {
+        fin >> n;
+        seq.procs[i].count = n;
+        for (int j = 0; j < n; j++) {
+            fin >> c;
+            OpType op;
+            switch (c[0])
+            {
+            case 'T':
+                if (c[1] == 'L') {
+                    op = TL;
+                } else {
+                    op = TR;
+                }
+                break;
+            
+            case 'M':
+                op = MOV;
+                break;
+            
+            case 'J':
+                op = JMP;
+                break;
+            
+            case 'L':
+                op = LIT;
+                break;
+            
+            default:
+                op = (OpType) (c[1] - '0');
+                break;
+            }
+            seq.procs[i].ops[j] = op;
+        }
+    }
+    return seq;
 }
 
 Result robot_run(const char* path) {
