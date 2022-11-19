@@ -158,9 +158,9 @@ struct Stack {
         current = current -> next;
     }
 
-    Proc* pop() {
+    Frame* pop() {
         current = current -> prev;
-        return current -> p;
+        return current;
     }
 
     void call() {
@@ -175,14 +175,23 @@ OpSeq& parse(const char* path) {
 Result robot_run(const char* path) {
     game.auto_save_id = 0;
     game.map_run = game.map_init;
+    int light_map[MAX_ROW][MAX_COL] = {0};
+    int light_count = game.map_run.num_lights;
+    for (int i = 0; i < game.map_run.num_lights; i++) {
+        Position pos = game.map_run.lights[i].pos;
+        light_map[pos.y][pos.x] = i + 1;
+    }
     OpSeq seq = parse(path);
     Proc main = seq.procs[0];
     Stack stack(&main);
     Frame* f = stack.current;
-    while (true) {
-        for (int i = f->c; i < f->p->count; i++) {
+    int i;
+    int step = 0;
+    while (f) {
+        for (i = f->c; i < f->p->count; i++) {
             Robot& r = game.map_run.robot;
-            switch (f->p->ops[i]) {
+            OpType op = f -> p -> ops[i];
+            switch (op) {
             case TL:
                 game.map_run.robot.dir = (Direction)((r.dir + 1) % 4);
                 break;
@@ -203,6 +212,7 @@ Result robot_run(const char* path) {
                 }
                 r.pos.x = x;
                 r.pos.y = y;
+                game.map_run.cells[y][x].robot = true;
                 break;
             
             case JMP:
@@ -217,19 +227,42 @@ Result robot_run(const char* path) {
                 }
                 r.pos.x = x;
                 r.pos.y = y;
+                game.map_run.cells[y][x].robot = true;
                 break;
 
             case LIT:
+                game.map_run.cells[r.pos.y][r.pos.x].light_id = 1;
+                int pl = light_map[r.pos.y][r.pos.x];
+                if (pl) {
+                    game.map_run.lights[pl-1].lighten = true;
+                    light_count--;
+                }
+                break;
 
             default:
+                int n = op - CALL;
+                if (n > seq.count) {
+                    warn();
+                    break;
+                }
+                stack.push( &(seq.procs[n]) );
+                f -> c = i + 1;
+                f = stack.current;
+                i = f -> c = 0;
                 break;
             }
+            auto_save();
+            step++;
+            if (step >= game.limit) {
+                return Result{step, LIMIT};
+            }
+            if (!light_count) {
+                return Result{step, LIGHT};
+            }
         }
+        f = stack.pop();
     }
-    for(int i = 0; i < seq.count; i++) {
-        Proc p = seq.procs[i];
-
-    }
+    return Result{step, DARK};
 }
 
 // part 3 - User Interface
