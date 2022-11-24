@@ -31,7 +31,7 @@ const int BRICK_EXTENSION_Z = 25;
 const int ROBOT_SIZE_X = 35;
 const int ROBOT_SIZE_Y = 70;
 const int MAX_BRICKS = 256;
-
+const char* robot_source = "/res/robot.bmp";
 
 // global definition
 
@@ -628,7 +628,7 @@ void drawRobot() {
     int posz = game.map_run.cells[posx][posy].height - 1;
     
     ifstream robotbmp;
-    robotbmp.open("/Users/Shenium/Documents/robot.bmp", ios::binary);
+    robotbmp.open(robot_source, ios::binary);
     
     base_x = BASE_POINT_X - (posx - posy) * BRICK_EXTENSION_X;
     base_y = BASE_POINT_Y + (posx + posy) * BRICK_EXTENSION_Y -
