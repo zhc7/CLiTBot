@@ -244,7 +244,7 @@ Result robot_run(const char* path) {
                 int y = r.pos.y;
                 x += (r.dir - 1) * ((r.dir + 1) % 2);
                 y += -(r.dir - 2) * (r.dir % 2);
-                if (x < 0 or y < 0 or x >= game.map_run.col or y >= game.map_run.row or 
+                if (x < 0 || y < 0 || x >= game.map_run.col || y >= game.map_run.row || 
                     game.map_run.cells[y][x].height != game.map_run.cells[r.pos.y][r.pos.x].height) {
                     warn();
                     break;
@@ -259,7 +259,7 @@ Result robot_run(const char* path) {
                 int y = r.pos.y;
                 x += (r.dir - 1) * ((r.dir + 1) % 2);
                 y += -(r.dir - 2) * (r.dir % 2);
-                if (x < 0 or y < 0 or x >= game.map_run.col or y >= game.map_run.row or 
+                if (x < 0 || y < 0 || x >= game.map_run.col || y >= game.map_run.row || 
                     [](int x){return x > 0 ? x:-x;}(game.map_run.cells[y][x].height - game.map_run.cells[r.pos.y][r.pos.x].height) != 1) {
                     warn();
                     break;
