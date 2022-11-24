@@ -128,7 +128,7 @@ Game game; // 全局唯一的Game变量
 
 // part 1 - Graphics
 void auto_save();
-// WIP
+void save(const char* path);
 
 // part 2 - Execution
 // 执行结果枚举类型 
