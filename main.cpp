@@ -950,9 +950,7 @@ int load(char map_path[])
     else
     {
         strcpy(game.map_name, map_path);
-        //���ļ���Ϊmap_path�ĵ�ͼ�ļ������Զ�ȡ��game.map_init
         fin >> game.map_init.row >> game.map_init.col >> game.map_init.num_lights;
-        //���proc
         fin >> test.count;
         //heights of row
         for (int i = 0; i < game.map_init.row; i++)
@@ -1006,7 +1004,7 @@ int load(char map_path[])
 
 int interface()
 {
-    //��ʼ�����Ӧ��game.map_name��Ϊ���ַ���
+    //default game.map.name should be null
     int ifload = 0;
     char order[MAX_PATH_LEN], map_path[MAX_PATH_LEN];
     char autosave_code[20];
@@ -1036,14 +1034,14 @@ int interface()
             game.limit = steps_set;
         }
         //output set
-        else if (strcmp(order, "STATUS"))
+        else if (strcmp(order, "STATUS")==0)
         {
             if (ifload == 1)
             {
                 cout << "Map Name:" <<' '<< game.map_name << endl;
                 cout << "Autosave:" << ' ' << game.save_path << endl;
-                cout << "Step Limit" << ' ' << game.limit;
-                //�����ͼ״̬,��û����
+                cout << "Step Limit" << ' ' << game.limit<<endl;
+                //status
                 cout << "Robot is facing ";
                 if (game.map_init.robot.dir == LEFT)
                     cout << "left." << endl;
@@ -1068,5 +1066,6 @@ int interface()
 int main() {
 	 game.limit = 100;
     generateMapFile();
+    interface(); 
     return 0;
 }
