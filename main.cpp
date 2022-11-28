@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <cstring>
 using namespace std;
 
 
@@ -949,9 +950,9 @@ int load(char map_path[])
     else
     {
         strcpy(game.map_name, map_path);
-        //½«ÎÄ¼þÃûÎªmap_pathµÄµØÍ¼ÎÄ¼þµÄÊôÐÔ¶ÁÈ¡µ½game.map_init
+        //ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½Îªmap_pathï¿½Äµï¿½Í¼ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½È¡ï¿½ï¿½game.map_init
         fin >> game.map_init.row >> game.map_init.col >> game.map_init.num_lights;
-        //×î´óproc
+        //ï¿½ï¿½ï¿½proc
         fin >> test.count;
         //heights of row
         for (int i = 0; i < game.map_init.row; i++)
@@ -1005,9 +1006,10 @@ int load(char map_path[])
 
 int interface()
 {
-    //³õÊ¼Çé¿öÏÂÓ¦½«game.map_nameÉèÎª¿Õ×Ö·û´®
+    //ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½game.map_nameï¿½ï¿½Îªï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½
     int ifload = 0;
-    char order[MAX_PATH_LEN], map_path[MAX_PATH_LEN], char autosave_code[20];
+    char order[MAX_PATH_LEN], map_path[MAX_PATH_LEN];
+    char autosave_code[20];
     for (int steps = 1; steps <= game.limit; steps++)
     {
         int steps_set;
@@ -1041,7 +1043,7 @@ int interface()
                 cout << "Map Name:" <<' '<< game.map_name << endl;
                 cout << "Autosave:" << ' ' << game.save_path << endl;
                 cout << "Step Limit" << ' ' << game.limit;
-                //Êä³öµØÍ¼×´Ì¬,»¹Ã»×öÄØ
+                //ï¿½ï¿½ï¿½ï¿½ï¿½Í¼×´Ì¬,ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½
                 cout << "Robot is facing ";
                 if (game.map_init.robot.dir == LEFT)
                     cout << "left." << endl;
