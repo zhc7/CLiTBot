@@ -932,8 +932,139 @@ Result robot_run(const char* path) {
 
 // part 3 - User Interface
 // WIP
+Proc test;
+
+//interface
+
+int load(char map_path[])
+{
+    int direct;
+ 
+    ifstream fin(map_path);
+    if (!fin)
+    {
+        strcpy(game.map_name, "");
+        return 0;
+    }
+    else
+    {
+        strcpy(game.map_name, map_path);
+        //将文件名为map_path的地图文件的属性读取到game.map_init
+        fin >> game.map_init.row >> game.map_init.col >> game.map_init.num_lights;
+        //最大proc
+        fin >> test.count;
+        //heights of row
+        for (int i = 0; i < game.map_init.row; i++)
+        {
+            for (int j = 0; j < game.map_init.col; j++)
+            {
+                fin >> game.map_init.cells[i][j].height;
+            }
+        }
+        //
+        for (int i = 0; i < game.map_init.num_lights; i++)
+        {
+            fin >> game.map_init.lights[i].pos.x >> game.map_init.lights[i].pos.y;
+            game.map_init.lights[i].lighten = 0;
+        }
+        for (int i = 0; i < game.map_init.row; i++)
+        {
+            for (int j = 0; j < game.map_init.col; j++)
+            {
+                if ((i != game.map_init.lights[i].pos.x) || (j != game.map_init.lights[i].pos.y))
+                    game.map_init.cells[i][j].light_id = -1;
+            }
+        }
+        for (int i = 0; i < test.count; i++)
+        {
+            fin >> game.map_init.op_limit[i];
+        }
+        fin >> game.map_init.robot.pos.x >> game.map_init.robot.pos.y;
+        fin >> direct;
+        if (direct == 0)
+            game.map_init.robot.dir = LEFT;
+        else if (direct == 1)
+            game.map_init.robot.dir = DOWN;
+        else if (direct == 2)
+            game.map_init.robot.dir = RIGHT;
+        else if (direct == 3)
+            game.map_init.robot.dir = UP;
+        for (int i = 0; i < game.map_init.row; i++)
+        {
+            for (int j = 0; j < game.map_init.col; j++)
+            {
+                if ((i != game.map_init.robot.pos.x) || (j != game.map_init.robot.pos.y))
+                    game.map_init.cells[i][j].robot = false;
+                else
+                    game.map_init.cells[i][j].robot = true;
+            }
+        }
+        return 1;
+    }
+}
+
+int interface()
+{
+    //初始情况下应将game.map_name设为空字符串
+    int ifload = 0;
+    char order[MAX_PATH_LEN], map_path[MAX_PATH_LEN], char autosave_code[20];
+    for (int steps = 1; steps <= game.limit; steps++)
+    {
+        int steps_set;
+        cin >> order;
+        //load
+        if (strcmp(order, "LOAD") == 0)
+        {
+            cin >> map_path;
+            ifload = load(map_path);
+        }
+        //autosave
+        else if (strcmp(order, "AUTOSAVE") == 0)
+        {
+            cin >> autosave_code;
+            if (strcmp(autosave_code, "OFF") == 0)
+                game.save_path[0] = 0;
+            else
+                strcpy(game.save_path, autosave_code);
+        }
+        //limit of steps
+        else if (strcmp(order, "LIMIT") == 0)
+        {
+            cin >> steps_set;
+            game.limit = steps_set;
+        }
+        //output set
+        else if (strcmp(order, "STATUS"))
+        {
+            if (ifload == 1)
+            {
+                cout << "Map Name:" <<' '<< game.map_name << endl;
+                cout << "Autosave:" << ' ' << game.save_path << endl;
+                cout << "Step Limit" << ' ' << game.limit;
+                //输出地图状态,还没做呢
+                cout << "Robot is facing ";
+                if (game.map_init.robot.dir == LEFT)
+                    cout << "left." << endl;
+                else if (game.map_init.robot.dir == DOWN)
+                    cout << "down." << endl;
+                else if (game.map_init.robot.dir == RIGHT)
+                    cout << "right." << endl;
+                else if (game.map_init.robot.dir == UP)
+                    cout << "up." << endl;
+                cout << "Proc Limit:" << ' ' << '[';
+                for (int i = 0; i < test.count - 1; i++)
+                    cout << game.map_init.op_limit[i] << ',';
+                cout << game.map_init.op_limit[test.count - 1] << ']';
+            }
+        }
+
+    }
+    return 0;
+}
 
 
 int main() {
+	 game.limit = 100;
+    generateMapFile();
     return 0;
 }
