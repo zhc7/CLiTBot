@@ -147,7 +147,7 @@ struct Result {
 Result robot_run(const char* path);
 struct Frame;
 struct Stack;
-OpSeq& parse(const char* path);
+OpSeq parse(const char* path);
 
 // part 3 - User Interface
 void warn(/*WIP*/); //实现命令行警告
@@ -792,7 +792,7 @@ struct Stack {
     }
 };
 
-OpSeq& parse(const char* path) {
+OpSeq parse(const char* path) {
     ifstream fin(path);
     OpSeq seq;
     int t;
@@ -853,6 +853,7 @@ Result robot_run(const char* path) {
     Frame* f = stack.current;
     int i;
     int step = 0;
+    int x, y, pl;
     while (f) {
         for (i = f->c; i < f->p->count; i++) {
             Robot& r = game.map_run.robot;
@@ -867,8 +868,8 @@ Result robot_run(const char* path) {
                 break;
             
             case MOV:
-                int x = r.pos.x;
-                int y = r.pos.y;
+                x = r.pos.x;
+                y = r.pos.y;
                 x += (r.dir - 1) * ((r.dir + 1) % 2);
                 y += -(r.dir - 2) * (r.dir % 2);
                 if (x < 0 || y < 0 || x >= game.map_run.col || y >= game.map_run.row || 
@@ -882,8 +883,8 @@ Result robot_run(const char* path) {
                 break;
             
             case JMP:
-                int x = r.pos.x;
-                int y = r.pos.y;
+                x = r.pos.x;
+                y = r.pos.y;
                 x += (r.dir - 1) * ((r.dir + 1) % 2);
                 y += -(r.dir - 2) * (r.dir % 2);
                 if (x < 0 || y < 0 || x >= game.map_run.col || y >= game.map_run.row || 
@@ -898,7 +899,7 @@ Result robot_run(const char* path) {
 
             case LIT:
                 game.map_run.cells[r.pos.y][r.pos.x].light_id = 1;
-                int pl = light_map[r.pos.y][r.pos.x];
+                pl = light_map[r.pos.y][r.pos.x];
                 if (pl) {
                     game.map_run.lights[pl-1].lighten = true;
                     light_count--;
@@ -936,6 +937,7 @@ Result robot_run(const char* path) {
 Proc test;
 
 //interface
+void warn(){}
 
 int load(char map_path[])
 {
@@ -1065,7 +1067,7 @@ int interface()
 
 int main() {
 	 game.limit = 100;
-    generateMapFile();
     interface(); 
+    generateMapFile();
     return 0;
 }
