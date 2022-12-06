@@ -707,7 +707,7 @@ OpSeq parse(const char* path) {
                 break;
             
             default:
-                op = (OpType) (c[1] - '0');
+                op = (OpType) (c[1] - '0' + CALL);
                 break;
             }
             seq.procs[i].ops[j] = op;
@@ -729,11 +729,10 @@ Result robot_run(const char* path) {
     Proc main = seq.procs[0];
     Stack stack(&main);
     Frame* f = stack.current;
-    int i,x,y,pl;
     int step = 0;
     int x, y, pl;
     while (f) {
-        for (i = f->c; i < f->p->count; i++) {
+        for (int i = f->c; i < f->p->count; i++) {
             Robot& r = game.map_run.robot;
             OpType op = f -> p -> ops[i];
             switch (op) {
