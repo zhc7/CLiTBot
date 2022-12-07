@@ -1,4 +1,3 @@
-#pragma warning(disable:4996)
 #include <iostream>
 #include <fstream>
 #include <cstring>
@@ -18,6 +17,8 @@ int load(char map_path[])
     ifstream fin(map_path);
     if (!fin)
     {
+        cout << "load map error!!!"<<endl;
+        cout << "try to enter the proper map name"<<endl;
         strcpy(game.map_name, "");
         return 0;
     }
@@ -157,16 +158,36 @@ void operation(char op_path[])
     else
     {
         cin >> num_procs;
+        while (num_procs > num_procs_limit)
+        {
+            cout << "process limit exceeded!" << endl;
+            cout << "try to enter a value that is not bigger than "<< num_procs_limit << endl;
+            cin >> num_procs;
+        }
         op << num_procs<<endl;
         proc_id = new int[num_procs];//enter steps for each procs
         for (int i = 0; i < num_procs; i++)
         {
             cin >> proc_id[i];
-            op << proc_id[i]<<' ';
             for (int j = 0; j < proc_id[i]; j++)
             {
                 cin >> order;
-                op << order<<' ';
+            }
+            while (proc_id[i] > game.map_init.op_limit[i])
+            {
+                cout << "steps of this process have exceeded!" << endl;
+                cout << "the steps of this process should not be bigger than " << game.map_init.op_limit[i] << endl;
+                cout << "please input steps and command again" << endl;
+                cin >> proc_id[i];
+                for (int j = 0; j < proc_id[i]; j++)
+                {
+                    cin >> order;
+                }
+            }
+            op << proc_id[i]<<' ';
+            for (int j = 0; j < proc_id[i]; j++)
+            {
+                op << order << ' ';
             }
             op << endl;
         }
@@ -202,6 +223,8 @@ int interface()
         {
             cin >> autosave_code;
             if (strcmp(autosave_code, "OFF") == 0)
+                game.save_path[0] = '!';
+            else if (strcmp(autosave_code, "ON") == 0)
                 game.save_path[0] = 0;
             else
                 strcpy(game.save_path, autosave_code);
@@ -297,7 +320,7 @@ int interface()
             }
 
         }
-        else if (strcmp(order, "RUN") == 0)
+        else if (strcmp(order, "EXIT") == 0)
         {
             cout << "BYE!"<<endl;
             break;
@@ -310,4 +333,3 @@ int interface()
     }
     return 0;
 }
-
