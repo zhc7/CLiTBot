@@ -73,7 +73,7 @@ int load(char map_path[])
         {
             for (int j = 0; j < game.map_init.col; j++)
             {
-                if ((i != game.map_init.lights[i].pos.x) || (j != game.map_init.lights[i].pos.y))
+                if ((j != game.map_init.lights[i].pos.x) || (i != game.map_init.lights[i].pos.y))
                     game.map_init.cells[i][j].light_id = -1;
             }
         }
@@ -115,7 +115,7 @@ void mapinfo(Map *map)
             else
             {
                 //while robot is on this cordinate
-                if ((map->robot.pos.x == i) && (map->robot.pos.y == j))
+                if ((map->robot.pos.x == j) && (map->robot.pos.y == i))
                 {
                     if (map->cells[i][j].light_id == -1)
                         cout << "\e[91;100;1m"; //red, grey
@@ -123,10 +123,16 @@ void mapinfo(Map *map)
                     {
                         for (int k = 0; k < map->num_lights; k++)
                         {
-                            if ((map->lights[k].pos.x == i) && (map->lights[k].pos.y == j) && (map->lights[k].lighten))//it is lighten
+                            if ((map->lights[k].pos.x == j) && (map->lights[k].pos.y == i) && (map->lights[k].lighten))//it is lighten
+                            {
                                 cout << "\e[91;103;1m";//red, yellow
-                            else if ((map->lights[k].pos.x == i) && (map->lights[k].pos.y == j) && (!map->lights[k].lighten))
+                                break;
+                            }                               
+                            else if ((map->lights[k].pos.x == j) && (map->lights[k].pos.y == i) && (!map->lights[k].lighten))
+                            {
                                 cout << "\e[91;104;1m";//red, blue
+                                break;
+                            }                               
                         }
                     }
                 }
@@ -138,10 +144,16 @@ void mapinfo(Map *map)
                     {
                         for (int k = 0; k < map->num_lights; k++)
                         {
-                            if ((map->lights[k].pos.x == i) && (map->lights[k].pos.y == j) && (map->lights[k].lighten))//it is lighten
+                            if ((map->lights[k].pos.x == j) && (map->lights[k].pos.y == i) && (map->lights[k].lighten))//it is lighten
+                            {
                                 cout << "\e[92;103;1m";//green, yellow
-                            else if ((map->lights[k].pos.x == i) && (map->lights[k].pos.y == j) && (!map->lights[k].lighten))
+                                break;
+                            }                                
+                            else if ((map->lights[k].pos.x == j) && (map->lights[k].pos.y == i) && (!map->lights[k].lighten))
+                            {
                                 cout << "\e[92;104;1m";//green, blue;
+                                break;
+                            }   
                         }
                     }
                 }
@@ -167,14 +179,15 @@ void mapinfo(Map *map)
         cout << "up." << endl;
         break;
     }
-
-    cout << '[';
+    
+    cout << "Proc limits : [";
     for (i = 0; i < num_procs_limit-1; i++)
     {
         cout << map->op_limit[i] << ",";
     }
     cout<<map->op_limit[num_procs_limit - 1] << ']' << endl;
 }
+
 
 void operation(char op_path[])
 {
@@ -296,7 +309,7 @@ int interface()
                     else
                     {
                         //while robot is on this cordinate
-                        if ((game.map_run.robot.pos.x == i) && (game.map_run.robot.pos.y == j))
+                        if ((game.map_run.robot.pos.x == j) && (game.map_run.robot.pos.y == i))
                         {
                             if (game.map_run.cells[i][j].light_id == -1)
                                 cout << "\e[91;100;1m"; //red, grey
@@ -304,16 +317,16 @@ int interface()
                             {
                                 for (int k = 0; k < game.map_run.num_lights; k++)
                                 {
-                                    if ((game.map_run.lights[k].pos.x == i) && (game.map_run.lights[k].pos.y == j) && (game.map_run.lights[k].lighten))//it is lighten
+                                    if ((game.map_run.lights[k].pos.x == j) && (game.map_run.lights[k].pos.y == i) && (game.map_run.lights[k].lighten))//it is lighten
                                         cout << "\e[91;103;1m";//red, yellow
-                                    else if ((game.map_run.lights[k].pos.x == i) && (game.map_run.lights[k].pos.y == j) && (!game.map_run.lights[k].lighten))
+                                    else if ((game.map_run.lights[k].pos.x == j) && (game.map_run.lights[k].pos.y == i) && (!game.map_run.lights[k].lighten))
                                         cout << "\e[91;104;1m";//red, blue
                                 }
                             }
                         }
                         else
                         {
-                            if ((game.map_run.robot.pos.x == i) && (game.map_run.robot.pos.y == j))
+                            if ((game.map_run.robot.pos.x == j) && (game.map_run.robot.pos.y == i))
                             {
                                 if (game.map_run.cells[i][j].light_id == -1)
                                     cout << "\e[92;100;1m"; //red, grey
@@ -321,9 +334,9 @@ int interface()
                                 {
                                     for (int k = 0; k < game.map_run.num_lights; k++)
                                     {
-                                        if ((game.map_run.lights[k].pos.x == i) && (game.map_run.lights[k].pos.y == j) && (game.map_run.lights[k].lighten))//it is lighten
+                                        if ((game.map_run.lights[k].pos.x == j) && (game.map_run.lights[k].pos.y == i) && (game.map_run.lights[k].lighten))//it is lighten
                                             cout << "\e[92;103;1m";//red, yellow
-                                        else if ((game.map_run.lights[k].pos.x == i) && (game.map_run.lights[k].pos.y == j) && (!game.map_run.lights[k].lighten))
+                                        else if ((game.map_run.lights[k].pos.x == j) && (game.map_run.lights[k].pos.y == i) && (!game.map_run.lights[k].lighten))
                                             cout << "\e[92;104;1m";//red, blue
                                     }
                                 }
