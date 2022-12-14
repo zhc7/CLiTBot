@@ -10,6 +10,33 @@ extern Game game;
 extern Result robot_run(const char* path);
 
 //interface
+void warn(char s[]) {
+    cout << "\e[93;1m";
+    cout << "Warning: ";
+    cout << s << endl;
+    cout << "\e[0m";
+}
+
+void error(char s[]) {
+    cout << "\e[91;1m" << "Error: " << s << "\e[0m" << endl;
+}
+
+void info(char s[]) {
+    cout << "\e[96;1m" << "Info: " << s << "\e[0m" << endl;
+}
+
+int convert(int direct) {
+    switch (direct) {
+        case 0:
+            return 3;
+        case 1:
+            return 1;
+        case 2:
+            return 0;
+        case 3:
+            return 2;
+    }
+}
 
 int load(char map_path[])
 {
@@ -17,7 +44,8 @@ int load(char map_path[])
     ifstream fin(map_path);
     if (!fin)
     {
-        cout << "load map error!!!"<<endl;
+        char msg[] = "Map file does not exist";
+        error(msg);
         cout << "try to enter the proper map name"<<endl;
         strcpy(game.map_name, "");
         return 0;
@@ -55,7 +83,8 @@ int load(char map_path[])
         }
         fin >> game.map_init.robot.pos.x >> game.map_init.robot.pos.y;
         fin >> direct;
-            game.map_init.robot.dir=(Direction)direct;
+        direct = convert(direct);
+        game.map_init.robot.dir=(Direction)direct;
         for (int i = 0; i < game.map_init.row; i++)
         {
             for (int j = 0; j < game.map_init.col; j++)
@@ -75,7 +104,7 @@ void mapinfo(Map *map)
     int i;
     cout << "Map Name:" << ' ' << game.map_name << endl;
     cout << "Autosave:" << ' ' << game.save_path << endl;
-    cout << "Step Limit" << ' ' << game.limit << endl;
+    cout << "Step Limit:" << ' ' << game.limit << endl;
     cout <<map->row << ' ' << map->col << ' ' << map->num_lights << ' ' << num_procs_limit << endl;
     for (i = 0; i < map->row; i++)
     {
@@ -138,7 +167,7 @@ void mapinfo(Map *map)
         cout << "up." << endl;
         break;
     }
-    
+
     cout << '[';
     for (i = 0; i < num_procs_limit-1; i++)
     {
@@ -204,8 +233,8 @@ int interface()
     char order[MAX_PATH_LEN], map_path[MAX_PATH_LEN],op_path[MAX_PATH_LEN];
     char autosave_code[20];
     for (int steps = 1; steps <= game.limit; steps++)
-    {   
-        cout<<"#>";
+    {
+        cout << "\e[92;1m#CLiTBot > \e[0m";
         int steps_set;
         cin >> order;
         for (int i = 0; i < strlen(order); i++)
@@ -217,6 +246,10 @@ int interface()
         {
             cin >> map_path;
             ifload = load(map_path);
+            if (ifload) {
+                char msg[] = "Map successfully loaded";
+                info(msg);
+            }
         }
         //autosave
         else if (strcmp(order, "AUTOSAVE") == 0)
@@ -322,12 +355,13 @@ int interface()
         }
         else if (strcmp(order, "EXIT") == 0)
         {
-            cout << "BYE!"<<endl;
+            cout << "Quiting..." << endl;
             break;
         }
         else
         {
-            cout << "unknown command!!!" << endl;
+            char msg[] = "Unknown command";
+            error(msg);
         }
 
     }

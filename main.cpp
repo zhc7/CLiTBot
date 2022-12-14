@@ -22,14 +22,6 @@ struct Frame;
 struct Stack;
 OpSeq parse(const char* path);
 
-// part 3 - User Interface
-void warn(/*WIP*/)
-{
-    cout << "\e[91;103;1m";
-    cout << "warning!";
-    cout << "\e[0m";
-} //实现命令行警告
-// WIP
 
 
 // API Implementation
@@ -751,7 +743,8 @@ Result robot_run(const char* path) {
                 y += -(r.dir - 2) * (r.dir % 2);
                 if (x < 0 || y < 0 || x >= game.map_run.col || y >= game.map_run.row || 
                     game.map_run.cells[y][x].height != game.map_run.cells[r.pos.y][r.pos.x].height) {
-                    warn();
+                    char msg[] = "Robot out of map.";
+                    warn(msg);
                     break;
                 }
                 r.pos.x = x;
@@ -766,7 +759,8 @@ Result robot_run(const char* path) {
                 y += -(r.dir - 2) * (r.dir % 2);
                 if (x < 0 || y < 0 || x >= game.map_run.col || y >= game.map_run.row || 
                     [](int x){return x > 0 ? x:-x;}(game.map_run.cells[y][x].height - game.map_run.cells[r.pos.y][r.pos.x].height) != 1) {
-                    warn();
+                    char msg[] = "Robot out of map.";
+                    warn(msg);
                     break;
                 }
                 r.pos.x = x;
@@ -786,7 +780,8 @@ Result robot_run(const char* path) {
             default:
                 int n = op - CALL;
                 if (n > seq.count) {
-                    warn();
+                    char msg[] = "No procedure found.";
+                    warn(msg);
                     break;
                 }
                 stack.push( &(seq.procs[n]) );
