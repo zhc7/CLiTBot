@@ -653,6 +653,7 @@ struct Stack {
 
     void push (Proc* p) {
         current -> next = new Frame(p);
+        current -> next -> prev = current;
         current = current -> next;
     }
 
@@ -788,6 +789,7 @@ Result robot_run(const char* path) {
                 f -> c = i + 1;
                 f = stack.current;
                 i = f -> c = 0;
+                i--; // offset i++ in for
                 break;
             }
             auto_save();
