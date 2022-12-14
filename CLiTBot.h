@@ -56,7 +56,7 @@ struct Robot {
 struct Light {
     Position pos; // 灯位置
     bool lighten; // 是否被点亮
-};           
+};
 
 // 单元格类型
 struct Cell {
@@ -74,7 +74,7 @@ enum OpType {
     LIT,
     CALL
 }; // TL为左转，TR为右转，MOV为向前行走，JMP为跳跃，LIT为点亮灯；
-   // 使用CALL表示调用MAIN，CALL + 1表示调用P1，以此类推。
+// 使用CALL表示调用MAIN，CALL + 1表示调用P1，以此类推。
 
 // 过程类型
 struct Proc {
@@ -89,24 +89,24 @@ struct OpSeq {
     // procs[0]为MAIN过程，procs[1]为P1过程，以此类推
     Proc procs[MAX_PROCS];
     int count; // 有效过程数
-};             
+};
 
 // 地图状态类型
-struct Map { 
+struct Map {
     // 单元格组成二维数组，MAX_ROW、MAX_COL为合理常数
     Cell cells[MAX_ROW][MAX_COL];
     int row, col; // 有效行数、有效列数 
-    
+
     // 灯记录，MAX_LIT为合理常数
     Light lights[MAX_LIT];
     int num_lights; // 有效灯数 
-    
+
     // 地图上同时只有一个机器人
-    Robot robot;    
-    
+    Robot robot;
+
     // 每个过程的指令数限制
     int op_limit[MAX_PROCS];
-}; 
+};
 
 // 游戏状态类型
 struct Game {

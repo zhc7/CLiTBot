@@ -1,26 +1,30 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
-#include "CLiTBot.h" 
+#include "CLiTBot.h"
 #include "interface.h"
+
 using namespace std;
 
 Game game; // 全局唯一的Game变量
-const char* robot_source = "/res/robot.bmp";
+const char *robot_source = "/res/robot.bmp";
 
 // API Declaration
 
 // part 1 - Graphics
 void auto_save();
-void save(const char* path);
+
+void save(const char *path);
 
 // part 2 - Execution
 // 执行结果枚举类型 
 
-Result robot_run(const char* path);
+Result robot_run(const char *path);
+
 struct Frame;
 struct Stack;
-OpSeq parse(const char* path);
+
+OpSeq parse(const char *path);
 
 
 
@@ -29,17 +33,17 @@ OpSeq parse(const char* path);
 // part 1 - Graphics
 #pragma pack(1)
 struct BMPFileHeader {
-    
+
     char bfType[2];
     int bfSize;
     short bfReserved1, bfReserved2;
     int bfOffBits;
-    
+
 };
 
 #pragma pack(1)
 struct BMPInfoHeader {
-    
+
     int biSize;
     int biWidth;
     int biHeight;
@@ -51,17 +55,19 @@ struct BMPInfoHeader {
     int biYPelsPerMeter;
     int biClrUsed;
     int biClrImportant;
-    
+
 };
 #pragma pack(1)
+
 struct Pixel {
-    
+
     unsigned char colorB;
     unsigned char colorG;
     unsigned char colorR;
-    Pixel(int B=DEFAULT_B, int G=DEFAULT_G, int R=DEFAULT_R):
-    colorR(R), colorG(G), colorB(B) {}
-    
+
+    Pixel(int B = DEFAULT_B, int G = DEFAULT_G, int R = DEFAULT_R) :
+            colorR(R), colorG(G), colorB(B) {}
+
 };
 
 Pixel YELLOW(0x37, 0xff, 0xff);
@@ -76,35 +82,38 @@ Pixel PURPLEGREY(0xdc, 0xb8, 0xb8);
 
 Pixel pixelChart[IMAGE_WIDTH][IMAGE_HEIGHT];
 
-enum BrickStatus {DIM, BRIGHT, NONLIGHT};
+enum BrickStatus {
+    DIM, BRIGHT, NONLIGHT
+};
 
 #pragma pack(1)
-struct Brick {
-    
-    int posx, posy, posz;
-    
-    BrickStatus status;
-    
-    Brick(int x=0, int y=0, int z=0, BrickStatus s=DIM):
-    posx(x), posy(y), posz(z), status(s) {}
 
-    
+struct Brick {
+
+    int posx, posy, posz;
+
+    BrickStatus status;
+
+    Brick(int x = 0, int y = 0, int z = 0, BrickStatus s = DIM) :
+            posx(x), posy(y), posz(z), status(s) {}
+
+
     // if two bricks have the same x and y, then compare their zs;
     // the brick with a lower x + y goes first;
-    
+
     bool operator<(const Brick &other) {
-        
+
         if ((posx + posy) < (other.posx + other.posy)) return true;
         if ((posx + posy) > (other.posx + other.posy)) return false;
         if (posx > other.posx) return true;
         if (posx < other.posx) return false;
         if (posz < other.posz) return true;
         return false;
-        
+
     }
-    
+
     void draw();
-    
+
 };
 
 Brick bricks[MAX_BRICKS];
@@ -125,7 +134,7 @@ void brickSort() {
 }
 
 void generateMapFile() {
-    
+
     char path[MAX_PATH_LEN];
     int tmp, rows, cols, num_lights, num_procs;
     cout << "Save the file at path: ";
@@ -167,7 +176,7 @@ void generateMapFile() {
     cout << "info of the robot (x, y, d): ";
     cin >> x >> y >> d;
     map << x << SPACE << y << SPACE << d;
-    
+
 }
 
 void loadMapFile(const char *path) {
@@ -179,16 +188,16 @@ void loadMapFile(const char *path) {
     fin >> game.limit;
     for (int i = 0; i < game.map_init.row; i++) {
         for (int j = 0; j < game.map_init.col; j++) {
-            
+
             fin >> game.map_init.cells[i][j].height;
             game.map_init.cells[i][j].light_id = -1;
             game.map_init.cells[i][j].robot = false;
-            
+
         }
     }
-    
+
     for (int i = 0; i < game.map_init.num_lights; i++) {
-        
+
         int x, y;
         fin >> x;
         fin >> y;
@@ -196,335 +205,387 @@ void loadMapFile(const char *path) {
         game.map_init.lights[i].pos.y = y;
         game.map_init.lights[i].lighten = false;
         game.map_init.cells[x][y].light_id = i;
-        
+
     }
-    
+
     for (int i = 0; i < game.limit; i++) {
         fin >> game.map_init.op_limit[i];
     }
-    
+
     {
-        
+
         int x, y, d;
         fin >> x >> y >> d;
         game.map_init.robot.pos.x = x;
         game.map_init.robot.pos.y = y;
-        game.map_init.robot.dir = (Direction)d;
-        
+        game.map_init.robot.dir = (Direction) d;
+
     }
-    
+
     game.map_run = game.map_init;
-    
+
 }
 
 
 void Brick::draw() {
-    
+
     int X;
     int Y;
-    
+
     int centerX =
-    BASE_POINT_X - (posx - posy) * BRICK_EXTENSION_X;
+            BASE_POINT_X - (posx - posy) * BRICK_EXTENSION_X;
     int centerY =
-    BASE_POINT_Y + (posx + posy) * BRICK_EXTENSION_Y - posz * BRICK_EXTENSION_Z;
-    
+            BASE_POINT_Y + (posx + posy) * BRICK_EXTENSION_Y - posz * BRICK_EXTENSION_Z;
+
     X = centerX;
     Y = centerY;
-        
+
     X = BASE_POINT_X - (posx - posy) * BRICK_EXTENSION_X;
     Y = BASE_POINT_Y + (posx + posy) * BRICK_EXTENSION_Y - posz * BRICK_EXTENSION_Z;
     Y += BRICK_EXTENSION_Y + 1;
     pixelChart[X][Y] = LINE_COLOR;
-    
+
     for (int i = 0; i < BRICK_EXTENSION_Y + 1; i++) {
-        Y--; pixelChart[X][Y] = LINE_COLOR;
-        X--; pixelChart[X][Y] = LINE_COLOR;
-        X--; pixelChart[X][Y] = LINE_COLOR;
+        Y--;
+        pixelChart[X][Y] = LINE_COLOR;
+        X--;
+        pixelChart[X][Y] = LINE_COLOR;
+        X--;
+        pixelChart[X][Y] = LINE_COLOR;
     }
-    
+
     X = BASE_POINT_X - (posx - posy) * BRICK_EXTENSION_X;
     Y = BASE_POINT_Y + (posx + posy) * BRICK_EXTENSION_Y - posz * BRICK_EXTENSION_Z;
     Y += BRICK_EXTENSION_Y - 1;
     pixelChart[X][Y] = LINE_COLOR;
-    
+
     for (int i = 0; i < BRICK_EXTENSION_Y - 1; i++) {
-        X--; pixelChart[X][Y] = LINE_COLOR;
-        Y--; pixelChart[X][Y] = LINE_COLOR;
-        X--; pixelChart[X][Y] = LINE_COLOR;
+        X--;
+        pixelChart[X][Y] = LINE_COLOR;
+        Y--;
+        pixelChart[X][Y] = LINE_COLOR;
+        X--;
+        pixelChart[X][Y] = LINE_COLOR;
     }
-    
-    X--; pixelChart[X][Y] = LINE_COLOR;
-    
+
+    X--;
+    pixelChart[X][Y] = LINE_COLOR;
+
     X = BASE_POINT_X - (posx - posy) * BRICK_EXTENSION_X;
     Y = BASE_POINT_Y + (posx + posy) * BRICK_EXTENSION_Y - posz * BRICK_EXTENSION_Z;
     Y += BRICK_EXTENSION_Y + 1;
     pixelChart[X][Y] = LINE_COLOR;
-    
+
     for (int i = 0; i < BRICK_EXTENSION_Y + 1; i++) {
-        Y--; pixelChart[X][Y] = LINE_COLOR;
-        X++; pixelChart[X][Y] = LINE_COLOR;
-        X++; pixelChart[X][Y] = LINE_COLOR;
+        Y--;
+        pixelChart[X][Y] = LINE_COLOR;
+        X++;
+        pixelChart[X][Y] = LINE_COLOR;
+        X++;
+        pixelChart[X][Y] = LINE_COLOR;
     }
-    
+
     X = BASE_POINT_X - (posx - posy) * BRICK_EXTENSION_X;
     Y = BASE_POINT_Y + (posx + posy) * BRICK_EXTENSION_Y - posz * BRICK_EXTENSION_Z;
     Y += BRICK_EXTENSION_Y - 1;
     pixelChart[X][Y] = LINE_COLOR;
-    
+
     for (int i = 0; i < BRICK_EXTENSION_Y - 1; i++) {
-        X++; pixelChart[X][Y] = LINE_COLOR;
-        Y--; pixelChart[X][Y] = LINE_COLOR;
-        X++; pixelChart[X][Y] = LINE_COLOR;
+        X++;
+        pixelChart[X][Y] = LINE_COLOR;
+        Y--;
+        pixelChart[X][Y] = LINE_COLOR;
+        X++;
+        pixelChart[X][Y] = LINE_COLOR;
     }
-    
-    X++; pixelChart[X][Y] = LINE_COLOR;
-    
+
+    X++;
+    pixelChart[X][Y] = LINE_COLOR;
+
     X = BASE_POINT_X - (posx - posy) * BRICK_EXTENSION_X;
     Y = BASE_POINT_Y + (posx + posy) * BRICK_EXTENSION_Y - posz * BRICK_EXTENSION_Z;
     Y -= BRICK_EXTENSION_Y + 1;
     pixelChart[X][Y] = LINE_COLOR;
-    
+
     for (int i = 0; i < BRICK_EXTENSION_Y + 1; i++) {
-        Y++; pixelChart[X][Y] = LINE_COLOR;
-        X--; pixelChart[X][Y] = LINE_COLOR;
-        X--; pixelChart[X][Y] = LINE_COLOR;
+        Y++;
+        pixelChart[X][Y] = LINE_COLOR;
+        X--;
+        pixelChart[X][Y] = LINE_COLOR;
+        X--;
+        pixelChart[X][Y] = LINE_COLOR;
     }
-    
+
     X = BASE_POINT_X - (posx - posy) * BRICK_EXTENSION_X;
     Y = BASE_POINT_Y + (posx + posy) * BRICK_EXTENSION_Y - posz * BRICK_EXTENSION_Z;
     Y -= BRICK_EXTENSION_Y - 1;
     pixelChart[X][Y] = LINE_COLOR;
-    
+
     for (int i = 0; i < BRICK_EXTENSION_Y - 1; i++) {
-        X--; pixelChart[X][Y] = LINE_COLOR;
-        Y++; pixelChart[X][Y] = LINE_COLOR;
-        X--; pixelChart[X][Y] = LINE_COLOR;
+        X--;
+        pixelChart[X][Y] = LINE_COLOR;
+        Y++;
+        pixelChart[X][Y] = LINE_COLOR;
+        X--;
+        pixelChart[X][Y] = LINE_COLOR;
     }
-    
-    X--; pixelChart[X][Y] = LINE_COLOR;
-    
+
+    X--;
+    pixelChart[X][Y] = LINE_COLOR;
+
     X = BASE_POINT_X - (posx - posy) * BRICK_EXTENSION_X;
     Y = BASE_POINT_Y + (posx + posy) * BRICK_EXTENSION_Y - posz * BRICK_EXTENSION_Z;
     Y -= BRICK_EXTENSION_Y + 1;
     pixelChart[X][Y] = LINE_COLOR;
-    
+
     for (int i = 0; i < BRICK_EXTENSION_Y + 1; i++) {
-        Y++; pixelChart[X][Y] = LINE_COLOR;
-        X++; pixelChart[X][Y] = LINE_COLOR;
-        X++; pixelChart[X][Y] = LINE_COLOR;
+        Y++;
+        pixelChart[X][Y] = LINE_COLOR;
+        X++;
+        pixelChart[X][Y] = LINE_COLOR;
+        X++;
+        pixelChart[X][Y] = LINE_COLOR;
     }
-    
+
     X = BASE_POINT_X - (posx - posy) * BRICK_EXTENSION_X;
     Y = BASE_POINT_Y + (posx + posy) * BRICK_EXTENSION_Y - posz * BRICK_EXTENSION_Z;
     Y -= BRICK_EXTENSION_Y - 1;
     pixelChart[X][Y] = LINE_COLOR;
-    
+
     for (int i = 0; i < BRICK_EXTENSION_Y - 1; i++) {
-        X++; pixelChart[X][Y] = LINE_COLOR;
-        Y++; pixelChart[X][Y] = LINE_COLOR;
-        X++; pixelChart[X][Y] = LINE_COLOR;
+        X++;
+        pixelChart[X][Y] = LINE_COLOR;
+        Y++;
+        pixelChart[X][Y] = LINE_COLOR;
+        X++;
+        pixelChart[X][Y] = LINE_COLOR;
     }
-    
-    X++; pixelChart[X][Y] = LINE_COLOR;
-    
+
+    X++;
+    pixelChart[X][Y] = LINE_COLOR;
+
     Y = centerY;
     X = centerX - BRICK_EXTENSION_X - 2;
-    
+
     for (int i = 0; i < BRICK_EXTENSION_Z; i++) {
         pixelChart[X][Y + i] = LINE_COLOR;
         pixelChart[X + 1][Y + i + 1] = LINE_COLOR;
         pixelChart[X + 2][Y + i + 2] = LINE_COLOR;
 
     }
-    
+
     Y = centerY;
     X = centerX + BRICK_EXTENSION_X + 2;
-    
+
     for (int i = 0; i < BRICK_EXTENSION_Z; i++) {
         pixelChart[X][Y + i] = LINE_COLOR;
         pixelChart[X - 1][Y + i + 1] = LINE_COLOR;
         pixelChart[X - 2][Y + i + 2] = LINE_COLOR;
 
     }
-    
+
     Y = centerY + BRICK_EXTENSION_Y + 1;
     X = centerX;
-    
+
     for (int i = 0; i < BRICK_EXTENSION_Z; i++) {
         pixelChart[X][Y + i + 1] = LINE_COLOR;
         pixelChart[X + 1][Y + i] = LINE_COLOR;
         pixelChart[X - 1][Y + i] = LINE_COLOR;
     }
-    
+
     X = BASE_POINT_X - (posx - posy) * BRICK_EXTENSION_X;
     Y = BASE_POINT_Y + (posx + posy) * BRICK_EXTENSION_Y - posz * BRICK_EXTENSION_Z;
     Y += BRICK_EXTENSION_Y + BRICK_EXTENSION_Z + 1;
     pixelChart[X][Y] = LINE_COLOR;
-    
+
     for (int i = 0; i < BRICK_EXTENSION_Y + 1; i++) {
-        Y--; pixelChart[X][Y] = LINE_COLOR;
-        X--; pixelChart[X][Y] = LINE_COLOR;
-        X--; pixelChart[X][Y] = LINE_COLOR;
+        Y--;
+        pixelChart[X][Y] = LINE_COLOR;
+        X--;
+        pixelChart[X][Y] = LINE_COLOR;
+        X--;
+        pixelChart[X][Y] = LINE_COLOR;
     }
-    
+
     X = BASE_POINT_X - (posx - posy) * BRICK_EXTENSION_X;
     Y = BASE_POINT_Y + (posx + posy) * BRICK_EXTENSION_Y - posz * BRICK_EXTENSION_Z;
     Y += BRICK_EXTENSION_Y + BRICK_EXTENSION_Z - 1;
     pixelChart[X][Y] = LINE_COLOR;
-    
+
     for (int i = 0; i < BRICK_EXTENSION_Y; i++) {
-        X--; pixelChart[X][Y] = LINE_COLOR;
-        Y--; pixelChart[X][Y] = LINE_COLOR;
-        X--; pixelChart[X][Y] = LINE_COLOR;
+        X--;
+        pixelChart[X][Y] = LINE_COLOR;
+        Y--;
+        pixelChart[X][Y] = LINE_COLOR;
+        X--;
+        pixelChart[X][Y] = LINE_COLOR;
     }
-    
-    X--; pixelChart[X][Y] = LINE_COLOR;
-    
+
+    X--;
+    pixelChart[X][Y] = LINE_COLOR;
+
     X = BASE_POINT_X - (posx - posy) * BRICK_EXTENSION_X;
     Y = BASE_POINT_Y + (posx + posy) * BRICK_EXTENSION_Y - posz * BRICK_EXTENSION_Z;
     Y += BRICK_EXTENSION_Y + BRICK_EXTENSION_Z + 1;
     pixelChart[X][Y] = LINE_COLOR;
-    
+
     for (int i = 0; i < BRICK_EXTENSION_Y + 1; i++) {
-        Y--; pixelChart[X][Y] = LINE_COLOR;
-        X++; pixelChart[X][Y] = LINE_COLOR;
-        X++; pixelChart[X][Y] = LINE_COLOR;
+        Y--;
+        pixelChart[X][Y] = LINE_COLOR;
+        X++;
+        pixelChart[X][Y] = LINE_COLOR;
+        X++;
+        pixelChart[X][Y] = LINE_COLOR;
     }
-    
+
     X = BASE_POINT_X - (posx - posy) * BRICK_EXTENSION_X;
     Y = BASE_POINT_Y + (posx + posy) * BRICK_EXTENSION_Y - posz * BRICK_EXTENSION_Z;
     Y += BRICK_EXTENSION_Y + BRICK_EXTENSION_Z - 1;
     pixelChart[X][Y] = LINE_COLOR;
-    
+
     for (int i = 0; i < BRICK_EXTENSION_Y; i++) {
-        X++; pixelChart[X][Y] = LINE_COLOR;
-        Y--; pixelChart[X][Y] = LINE_COLOR;
-        X++; pixelChart[X][Y] = LINE_COLOR;
+        X++;
+        pixelChart[X][Y] = LINE_COLOR;
+        Y--;
+        pixelChart[X][Y] = LINE_COLOR;
+        X++;
+        pixelChart[X][Y] = LINE_COLOR;
     }
-    
-    X++; pixelChart[X][Y] = LINE_COLOR;
-    
+
+    X++;
+    pixelChart[X][Y] = LINE_COLOR;
+
     X = centerX;
     Y = centerY + BRICK_EXTENSION_Y + 1;
-    
+
     for (int i = 2; i <= BRICK_EXTENSION_X - 1; i++) {
         for (int j = 0; j <= BRICK_EXTENSION_Z - 4; j++) {
             pixelChart[X + i][Y - (i - 1) / 2 + j] = SIDE_COLOR_RIGHT;
         }
     }
-    
+
     X = centerX;
     Y = centerY + BRICK_EXTENSION_Y + 1;
-    
+
     for (int i = 2; i <= BRICK_EXTENSION_X - 1; i++) {
         for (int j = 0; j <= BRICK_EXTENSION_Z - 4; j++) {
             pixelChart[X - i][Y - (i - 1) / 2 + j] = SIDE_COLOR_LEFT;
         }
     }
-    
-    
-    
+
+
     if (status == DIM) {
-        
+
         for (int i = BRICK_EXTENSION_Y - 2; i >= 0; i--) {
             for (int j = 2 * (BRICK_EXTENSION_Y - 2 - i);
                  j >= 2 * (i - BRICK_EXTENSION_Y + 2); j--) {
                 pixelChart[centerX + j][centerY + i] = DARK_COLOR;
             }
         }
-        
+
         for (int i = -BRICK_EXTENSION_Y + 2; i <= 0; i++) {
             for (int j = 2 * (-BRICK_EXTENSION_Y + 2 - i);
                  j <= 2 * (i + BRICK_EXTENSION_Y - 2); j++) {
                 pixelChart[centerX + j][centerY + i] = DARK_COLOR;
             }
         }
-        
+
     }
-    
+
     if (status == BRIGHT) {
-        
+
         for (int i = BRICK_EXTENSION_Y - 2; i >= 0; i--) {
             for (int j = 2 * (BRICK_EXTENSION_Y - 2 - i);
                  j >= 2 * (i - BRICK_EXTENSION_Y + 2); j--) {
                 pixelChart[centerX + j][centerY + i] = LIGHT_COLOR;
             }
         }
-        
+
         for (int i = -BRICK_EXTENSION_Y + 2; i <= 0; i++) {
             for (int j = 2 * (-BRICK_EXTENSION_Y + 2 - i);
                  j <= 2 * (i + BRICK_EXTENSION_Y - 2); j++) {
                 pixelChart[centerX + j][centerY + i] = LIGHT_COLOR;
             }
         }
-        
+
     }
-    
+
     if (status == NONLIGHT) {
-        
+
         for (int i = BRICK_EXTENSION_Y - 2; i >= 0; i--) {
             for (int j = 2 * (BRICK_EXTENSION_Y - 2 - i);
                  j >= 2 * (i - BRICK_EXTENSION_Y + 2); j--) {
                 pixelChart[centerX + j][centerY + i] = NONLIGHT_COLOR;
             }
         }
-        
+
         for (int i = -BRICK_EXTENSION_Y + 2; i <= 0; i++) {
             for (int j = 2 * (-BRICK_EXTENSION_Y + 2 - i);
                  j <= 2 * (i + BRICK_EXTENSION_Y - 2); j++) {
                 pixelChart[centerX + j][centerY + i] = NONLIGHT_COLOR;
             }
         }
-        
+
     }
-    
+
 }
 
 
-
 void drawRobot() {
-    
+
     Robot &robot = game.map_run.robot;
-    
+
     int off_x = 0, off_y = 0;
-    
-    if (robot.dir == LEFT)  {off_x = 0;   off_y = 700;}
-    if (robot.dir == UP)    {off_x = 350; off_y = 700;}
-    if (robot.dir == DOWN)  {off_x = 0;   off_y = 0  ;}
-    if (robot.dir == RIGHT) {off_x = 350; off_y = 0  ;}
-    
-    
+
+    if (robot.dir == LEFT) {
+        off_x = 0;
+        off_y = 700;
+    }
+    if (robot.dir == UP) {
+        off_x = 350;
+        off_y = 700;
+    }
+    if (robot.dir == DOWN) {
+        off_x = 0;
+        off_y = 0;
+    }
+    if (robot.dir == RIGHT) {
+        off_x = 350;
+        off_y = 0;
+    }
+
+
     int base_x, base_y;
     int posx = robot.pos.y, posy = robot.pos.x;
     int posz = game.map_run.cells[posx][posy].height - 1;
-    
+
     ifstream robotbmp;
     robotbmp.open(robot_source, ios::binary);
-    
+
     base_x = BASE_POINT_X - (posx - posy) * BRICK_EXTENSION_X;
     base_y = BASE_POINT_Y + (posx + posy) * BRICK_EXTENSION_Y -
              posz * BRICK_EXTENSION_Z;
-    
+
     base_x -= ROBOT_SIZE_X;
     base_y -= ROBOT_SIZE_Y * 1.8;
-    
+
     Pixel temp;
-    
+
     for (int i = 0; i < ROBOT_SIZE_X * 2; i++) {
         for (int j = 0; j < ROBOT_SIZE_Y * 2; j++) {
-            
+
             int rbx = (i / (ROBOT_SIZE_X * 2.0)) * 350 + off_x;
             int rby = (j / (ROBOT_SIZE_Y * 2.0)) * 700 + off_y;
             robotbmp.seekg(0x36 + (rby * 700 + rbx) * 3);
-            robotbmp.read((char *)&temp, 3);
-            
+            robotbmp.read((char *) &temp, 3);
+
             if (temp.colorB != 164 || temp.colorG != 73 || temp.colorR != 163) {
                 pixelChart[i + base_x][ROBOT_SIZE_Y * 2 - j + base_y] = temp;
             }
-            
+
         }
     }
-    
+
 }
 
 void igniteBrick(int x, int y, int z) {
@@ -532,21 +593,21 @@ void igniteBrick(int x, int y, int z) {
         if (bricks[i].posx == x &&
             bricks[i].posy == y &&
             bricks[i].posz == z) {
-            
+
             if (bricks[i].status == DIM) {
                 bricks[i].status = BRIGHT;
-                
+
                 for (int j = i; j < brickCount; j++) {
                     bricks[j].draw();
                 }
-                
+
             } else if (bricks[i].status == BRIGHT) {
                 bricks[i].status = DIM;
-                
+
                 for (int j = i; j < brickCount; j++) {
                     bricks[j].draw();
                 }
-            
+
             }
             break;
         }
@@ -554,78 +615,78 @@ void igniteBrick(int x, int y, int z) {
 }
 
 void save(const char *path) {
-    
+
     brickCount = 0;
-    
+
     for (int i = 0; i < IMAGE_WIDTH; i++) {
         for (int j = 0; j < IMAGE_HEIGHT; j++) {
             pixelChart[i][j] = Pixel(DEFAULT_B, DEFAULT_G, DEFAULT_R);
         }
     }
-    
+
     BMPFileHeader bfh = {{'B', 'M'}, 0x36, 0, 0, 0x36};
     BMPInfoHeader bih = {0x28, IMAGE_WIDTH, IMAGE_HEIGHT, 1, 24, 0,
-        IMAGE_WIDTH * IMAGE_HEIGHT * 3, 0, 0, 0, 0};
-    
+                         IMAGE_WIDTH * IMAGE_HEIGHT * 3, 0, 0, 0, 0};
+
     ofstream mybmp(path, ios::binary);
-    
-    mybmp.write((char *)&bfh, sizeof(BMPFileHeader));
-    mybmp.write((char *)&bih, sizeof(BMPInfoHeader));
-    
+
+    mybmp.write((char *) &bfh, sizeof(BMPFileHeader));
+    mybmp.write((char *) &bih, sizeof(BMPInfoHeader));
+
     Brick robot(game.map_run.robot.pos.y, game.map_run.robot.pos.x, 10);
-    
+
     for (int i = 0; i < game.map_run.row; i++) {
-        
+
         for (int j = 0; j < game.map_run.col; j++) {
-            
+
             for (int k = 0; k < game.map_run.cells[i][j].height; k++) {
-                
+
                 BrickStatus s;
-                
+
                 if (game.map_run.cells[i][j].light_id == -1) {
                     s = NONLIGHT;
                 } else if (game.map_run.lights
-                           [game.map_run.cells[i][j].light_id].lighten) {
+                [game.map_run.cells[i][j].light_id].lighten) {
                     s = BRIGHT;
                 } else s = DIM;
-                
+
                 bricks[brickCount++] = Brick(j, i, k, s);
-                
+
             }
-            
+
         }
-        
+
     }
-    
+
     brickSort();
-    
+
     bool robotDrawn = false;
-    
+
     for (int i = 0; i < brickCount; i++) {
-        
+
         if (robot < bricks[i] && !robotDrawn) {
-            
+
             drawRobot();
             robotDrawn = true;
-            
+
         }
-        
+
         bricks[i].draw();
-        
+
     }
-    
+
     for (int Y = IMAGE_HEIGHT - 1; Y >= 0; Y--) {
-        
+
         for (int X = 0; X < IMAGE_WIDTH; X++) {
-            
-            mybmp.write((char *)&pixelChart[X][Y], sizeof(Pixel));
-            
+
+            mybmp.write((char *) &pixelChart[X][Y], sizeof(Pixel));
+
         }
-        
+
     }
-    
+
     mybmp.close();
-    
+
 }
 
 void auto_save() {
@@ -636,34 +697,36 @@ void auto_save() {
 
 // part 2 - Execution
 struct Frame {
-    Proc* p;
+    Proc *p;
     int c = 0;
-    Frame* next = nullptr;
-    Frame* prev = nullptr;
-    Frame (Proc* p) : p(p) {};
+    Frame *next = nullptr;
+    Frame *prev = nullptr;
+
+    Frame(Proc *p) : p(p) {};
 };
 
 struct Stack {
-    Frame* head;
-    Frame* current;
-    Stack (Proc* main) {
+    Frame *head;
+    Frame *current;
+
+    Stack(Proc *main) {
         head = new Frame(main);
         current = head;
     }
 
-    void push (Proc* p) {
-        current -> next = new Frame(p);
-        current -> next -> prev = current;
-        current = current -> next;
+    void push(Proc *p) {
+        current->next = new Frame(p);
+        current->next->prev = current;
+        current = current->next;
     }
 
-    Frame* pop() {
-        current = current -> prev;
+    Frame *pop() {
+        current = current->prev;
         return current;
     }
 };
 
-OpSeq parse(const char* path) {
+OpSeq parse(const char *path) {
     ifstream fin(path);
     if (!fin) {
         char msg[] = "Operation Sequence file does not exist.";
@@ -682,31 +745,30 @@ OpSeq parse(const char* path) {
         for (int j = 0; j < n; j++) {
             fin >> c;
             OpType op;
-            switch (c[0])
-            {
-            case 'T':
-                if (c[1] == 'L') {
-                    op = TL;
-                } else {
-                    op = TR;
-                }
-                break;
-            
-            case 'M':
-                op = MOV;
-                break;
-            
-            case 'J':
-                op = JMP;
-                break;
-            
-            case 'L':
-                op = LIT;
-                break;
-            
-            default:
-                op = (OpType) (c[1] - '0' + CALL);
-                break;
+            switch (c[0]) {
+                case 'T':
+                    if (c[1] == 'L') {
+                        op = TL;
+                    } else {
+                        op = TR;
+                    }
+                    break;
+
+                case 'M':
+                    op = MOV;
+                    break;
+
+                case 'J':
+                    op = JMP;
+                    break;
+
+                case 'L':
+                    op = LIT;
+                    break;
+
+                default:
+                    op = (OpType)(c[1] - '0' + CALL);
+                    break;
             }
             seq.procs[i].ops[j] = op;
         }
@@ -714,7 +776,7 @@ OpSeq parse(const char* path) {
     return seq;
 }
 
-Result robot_run(const char* path) {
+Result robot_run(const char *path) {
     game.auto_save_id = 0;
     game.map_run = game.map_init;
     int light_map[MAX_ROW][MAX_COL] = {0};
@@ -726,76 +788,77 @@ Result robot_run(const char* path) {
     OpSeq seq = parse(path);
     Proc main = seq.procs[0];
     Stack stack(&main);
-    Frame* f = stack.current;
+    Frame *f = stack.current;
     int step = 0;
     int x, y, pl;
     while (f) {
         for (int i = f->c; i < f->p->count; i++) {
-            Robot& r = game.map_run.robot;
-            OpType op = f -> p -> ops[i];
+            Robot &r = game.map_run.robot;
+            OpType op = f->p->ops[i];
             switch (op) {
-            case TL:
-                game.map_run.robot.dir = (Direction)((r.dir + 1) % 4);
-                break;
-            
-            case TR:
-                game.map_run.robot.dir = (Direction)((r.dir + 3) % 4);
-                break;
-            
-            case MOV:
-                x = r.pos.x;
-                y = r.pos.y;
-                x += (r.dir - 1) * ((r.dir + 1) % 2);
-                y += -(r.dir - 2) * (r.dir % 2);
-                if (x < 0 || y < 0 || x >= game.map_run.col || y >= game.map_run.row || 
-                    game.map_run.cells[y][x].height != game.map_run.cells[r.pos.y][r.pos.x].height) {
-                    char msg[] = "Robot out of map.";
-                    warn(msg);
+                case TL:
+                    game.map_run.robot.dir = (Direction)((r.dir + 1) % 4);
                     break;
-                }
-                r.pos.x = x;
-                r.pos.y = y;
-                game.map_run.cells[y][x].robot = true;
-                break;
-            
-            case JMP:
-                x = r.pos.x;
-                y = r.pos.y;
-                x += (r.dir - 1) * ((r.dir + 1) % 2);
-                y += -(r.dir - 2) * (r.dir % 2);
-                if (x < 0 || y < 0 || x >= game.map_run.col || y >= game.map_run.row || 
-                    [](int x){return x > 0 ? x:-x;}(game.map_run.cells[y][x].height - game.map_run.cells[r.pos.y][r.pos.x].height) != 1) {
-                    char msg[] = "Robot out of map.";
-                    warn(msg);
-                    break;
-                }
-                r.pos.x = x;
-                r.pos.y = y;
-                game.map_run.cells[y][x].robot = true;
-                break;
 
-            case LIT:
-                game.map_run.cells[r.pos.y][r.pos.x].light_id = 1;
-                pl = light_map[r.pos.y][r.pos.x];
-                if (pl) {
-                    game.map_run.lights[pl-1].lighten = true;
-                    light_count--;
-                }
-                break;
-
-            default:
-                int n = op - CALL;
-                if (n > seq.count) {
-                    char msg[] = "No procedure found.";
-                    warn(msg);
+                case TR:
+                    game.map_run.robot.dir = (Direction)((r.dir + 3) % 4);
                     break;
-                }
-                stack.push( &(seq.procs[n]) );
-                f -> c = i + 1;
-                f = stack.current;
-                i = f -> c = 0;
-                i--; // offset i++ in for
-                break;
+
+                case MOV:
+                    x = r.pos.x;
+                    y = r.pos.y;
+                    x += (r.dir - 1) * ((r.dir + 1) % 2);
+                    y += -(r.dir - 2) * (r.dir % 2);
+                    if (x < 0 || y < 0 || x >= game.map_run.col || y >= game.map_run.row ||
+                        game.map_run.cells[y][x].height != game.map_run.cells[r.pos.y][r.pos.x].height) {
+                        char msg[] = "Robot out of map.";
+                        warn(msg);
+                        break;
+                    }
+                    r.pos.x = x;
+                    r.pos.y = y;
+                    game.map_run.cells[y][x].robot = true;
+                    break;
+
+                case JMP:
+                    x = r.pos.x;
+                    y = r.pos.y;
+                    x += (r.dir - 1) * ((r.dir + 1) % 2);
+                    y += -(r.dir - 2) * (r.dir % 2);
+                    if (x < 0 || y < 0 || x >= game.map_run.col || y >= game.map_run.row ||
+                        [](int x) { return x > 0 ? x : -x; }(
+                                game.map_run.cells[y][x].height - game.map_run.cells[r.pos.y][r.pos.x].height) != 1) {
+                        char msg[] = "Robot out of map.";
+                        warn(msg);
+                        break;
+                    }
+                    r.pos.x = x;
+                    r.pos.y = y;
+                    game.map_run.cells[y][x].robot = true;
+                    break;
+
+                case LIT:
+                    game.map_run.cells[r.pos.y][r.pos.x].light_id = 1;
+                    pl = light_map[r.pos.y][r.pos.x];
+                    if (pl) {
+                        game.map_run.lights[pl - 1].lighten = true;
+                        light_count--;
+                    }
+                    break;
+
+                default:
+                    int n = op - CALL;
+                    if (n > seq.count) {
+                        char msg[] = "No procedure found.";
+                        warn(msg);
+                        break;
+                    }
+                    stack.push(&(seq.procs[n]));
+                    f->c = i + 1;
+                    f = stack.current;
+                    i = f->c = 0;
+                    i--; // offset i++ in for
+                    break;
             }
             auto_save();
             step++;
@@ -817,8 +880,8 @@ Result robot_run(const char* path) {
 
 
 int main() {
-	game.limit = 100;
+    game.limit = 100;
     //generateMapFile();
-    interface(); 
+    interface();
     return 0;
 }
