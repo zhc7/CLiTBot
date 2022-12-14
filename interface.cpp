@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
+#include <filesystem>
 #include "CLiTBot.h" 
 #include "interface.h"
 using namespace std;
@@ -40,6 +41,7 @@ int convert(int direct) {
         case 3:
             return 2;
     }
+    return -1;
 }
 
 int load(char map_path[])
@@ -118,7 +120,7 @@ void mapinfo(Map *map)
                 cout << ' ';
             else
             {
-                //while robot is on this cordinate
+                //while robot is on this coordinate
                 if ((map->robot.pos.x == j) && (map->robot.pos.y == i))
                 {
                     if (map->cells[i][j].light_id == -1)
@@ -127,7 +129,7 @@ void mapinfo(Map *map)
                     {
                         for (int k = 0; k < map->num_lights; k++)
                         {
-                            if ((map->lights[k].pos.x == j) && (map->lights[k].pos.y == i) && (map->lights[k].lighten))//it is lighten
+                            if ((map->lights[k].pos.x == j) && (map->lights[k].pos.y == i) && (map->lights[k].lighten))//it is lightened
                             {
                                 cout << "\e[91;103;1m";//red, yellow
                                 break;
@@ -148,7 +150,7 @@ void mapinfo(Map *map)
                     {
                         for (int k = 0; k < map->num_lights; k++)
                         {
-                            if ((map->lights[k].pos.x == j) && (map->lights[k].pos.y == i) && (map->lights[k].lighten))//it is lighten
+                            if ((map->lights[k].pos.x == j) && (map->lights[k].pos.y == i) && (map->lights[k].lighten))//it is lightened
                             {
                                 cout << "\e[92;103;1m";//green, yellow
                                 break;
@@ -249,9 +251,10 @@ int interface()
     int ifload = 0;
     char order[MAX_PATH_LEN], map_path[MAX_PATH_LEN],op_path[MAX_PATH_LEN];
     char autosave_code[20];
-    for (int steps = 1; steps <= game.limit; steps++)
+    while (true)
     {
-        cout << "\e[92;1m#CLiTBot > \e[0m";
+        string s = std::filesystem::current_path().string();
+        cout << "\e[92;1m#CLiTBot " << s << "> \e[0m";
         int steps_set;
         cin >> order;
         for (int i = 0; i < strlen(order); i++)
@@ -302,6 +305,11 @@ int interface()
         {
             int i;
             cin >> op_path;
+            if (!ifload) {
+                char msg[] = "You have not loaded any map yet.";
+                error(msg);
+                continue;
+            }
             Result result=robot_run(op_path);
             cout << "Step(s) used:" << ' ' << result.steps << endl;
             for (i = 0; i <game.map_run.row; i++)
@@ -312,7 +320,7 @@ int interface()
                         cout << ' ';
                     else
                     {
-                        //while robot is on this cordinate
+                        //while robot is on this coordinate
                         if ((game.map_run.robot.pos.x == j) && (game.map_run.robot.pos.y == i))
                         {
                             if (game.map_run.cells[i][j].light_id == -1)
@@ -321,7 +329,7 @@ int interface()
                             {
                                 for (int k = 0; k < game.map_run.num_lights; k++)
                                 {
-                                    if ((game.map_run.lights[k].pos.x == j) && (game.map_run.lights[k].pos.y == i) && (game.map_run.lights[k].lighten))//it is lighten
+                                    if ((game.map_run.lights[k].pos.x == j) && (game.map_run.lights[k].pos.y == i) && (game.map_run.lights[k].lighten))//it is lightened
                                         cout << "\e[91;103;1m";//red, yellow
                                     else if ((game.map_run.lights[k].pos.x == j) && (game.map_run.lights[k].pos.y == i) && (!game.map_run.lights[k].lighten))
                                         cout << "\e[91;104;1m";//red, blue
@@ -338,7 +346,7 @@ int interface()
                                 {
                                     for (int k = 0; k < game.map_run.num_lights; k++)
                                     {
-                                        if ((game.map_run.lights[k].pos.x == j) && (game.map_run.lights[k].pos.y == i) && (game.map_run.lights[k].lighten))//it is lighten
+                                        if ((game.map_run.lights[k].pos.x == j) && (game.map_run.lights[k].pos.y == i) && (game.map_run.lights[k].lighten))//it is lightened
                                             cout << "\e[92;103;1m";//red, yellow
                                         else if ((game.map_run.lights[k].pos.x == j) && (game.map_run.lights[k].pos.y == i) && (!game.map_run.lights[k].lighten))
                                             cout << "\e[92;104;1m";//red, blue
@@ -386,6 +394,18 @@ int interface()
         {
             cout << "Quiting..." << endl;
             break;
+        }
+        else if (strcmp(order, "CD") == 0) {
+            string path;
+            cin >> path;
+            std::filesystem::current_path(path);
+        }
+        else if (strcmp(order, "LS") == 0) {
+            cout << ".\n.." << endl;
+            auto path = std::filesystem::current_path();
+            for (const auto & entry : std::filesystem::directory_iterator(path)) {
+                std::cout << entry.path().filename().string() << std::endl;
+            }
         }
         else
         {

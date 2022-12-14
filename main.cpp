@@ -665,6 +665,11 @@ struct Stack {
 
 OpSeq parse(const char* path) {
     ifstream fin(path);
+    if (!fin) {
+        char msg[] = "Operation Sequence file does not exist.";
+        error(msg);
+        return OpSeq{{0}, 0};
+    }
     OpSeq seq;
     int t;
     int n;
