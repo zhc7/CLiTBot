@@ -25,6 +25,10 @@ void info(char s[]) {
     cout << "\e[96;1m" << "Info: " << s << "\e[0m" << endl;
 }
 
+void info(string s) {
+    cout << "\e[96;1m" << "Info: " << s << "\e[0m" << endl;
+}
+
 int convert(int direct) {
     switch (direct) {
         case 0:
@@ -364,7 +368,19 @@ int interface()
                 cout << "up." << endl;
                 break;
             }
-
+            string msg;
+            switch (result.result) {
+                case LIGHT:
+                    msg = "Congratulations! You Won!";
+                    break;
+                case LIMIT:
+                    msg = "Step limitation reached";
+                    break;
+                case DARK:
+                    msg = "Execution completed";
+                    break;
+            }
+            info(msg);
         }
         else if (strcmp(order, "EXIT") == 0)
         {
