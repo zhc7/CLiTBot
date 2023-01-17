@@ -2,16 +2,10 @@
 #include <fstream>
 #include <cstring>
 #include <filesystem>
-#include <string>
-#include <vector>
-#include <ctime>
-#include <map>
 #include "CLiTBot.h"
 #include "interface.h"
-#pragma warning(disable:4996)
 
 using namespace std;
-using namespace filesystem;
 int num_procs_limit;
 
 extern Game game;
@@ -179,6 +173,7 @@ void mapinfo(Map *map) {
     cout << map->op_limit[num_procs_limit - 1] << ']' << endl;
 }
 
+
 void operation(char op_path[])
 {
     int num_procs, * proc_id;
@@ -251,176 +246,9 @@ void operation(char op_path[])
     }
     op.close();
 }//op is ok!!!
-void delay(int ms)
-{
 
-    clock_t start=0,end=0;
-    start=clock();
-    while(end-start<ms)
-        end=clock();
-}
-void showrobot()
-{
-    char olstr[100];
-    ifstream ifs("./res/robot.txt");
-    while(!ifs.eof())
-    {
-
-        ifs.getline(olstr,100);
-        for(auto &e:olstr)
-        {
-            if(e=='.')
-                e=' ';
-        }
-        //delay(100000);
-        delay(20);
-        cout <<"\t\t"<<olstr<<endl;
-    }
-
-}
-#define pathdepth 100
-bool endofpath[pathdepth];
-
-void printtree(int depth)
-{
-    for (int i = 0; i < depth; i++)
-    {
-
-        if(endofpath[i]==false)
-            cout << "|    ";
-        else
-            cout << "     ";
-    }
-
-}
-void enumdir(path& directory,int depth)
-{
-    file_status s;
-    path p;
-#if defined(_WIN32) && !defined(__CYGWIN__)
-    wstring str;
-#else
-    string str;
-#endif
-    vector<path> curdir;
-    vector<path> curfile;
-    for (auto it = directory_iterator(directory); it != directory_iterator(); ++it)
-    {
-        s = it->symlink_status();
-        switch (s.type())
-        {
-        case file_type::regular:
-            curfile.push_back(*it);
-            break;
-
-        case file_type::directory:
-            curdir.push_back(*it);
-            break;
-        }
-    }
-    for (int i = 0; i < curfile.size(); i++)
-    {
-
-        printtree(depth);
-        str = curfile[i].filename();
-        cout << "\033[32m";
-        wcout << "|-" << str.c_str() << endl;
-        cout << "\033[37m";
-    }
-    for (int i = 0; i < curdir.size(); i++)
-    {
-        if (i + 1 == curdir.size())
-            endofpath[depth] = true;
-        printtree(depth);
-        str = curdir[i].filename();
- 
-        wcout << "|-" << str.c_str() << endl;
-
-        enumdir(curdir[i], depth + 1);
-    }
-
-
- 
-}
-
-map<string,string> CMD={{"LOAD","load the map!"},
-                            {"AUTOSAVE","automatic save to file"},
-                            {"LIMIT","limit the size!"},
-                            {"STATUS","get status"},
-                            {"OP","op run"},
-                            {"RUN","run the game"},
-                            {"EXIT","exit the game"},
-                            {"CD","come to directory"},
-                            {"LS","list file of current directory!"},
-                            {"TREE","display the file tree!"},
-                            {"HELP","help system"},
-                            {"CLS","clear the screen!"}
-                            };
-
-int matchstrnum(string s1,string s2)
-{
-    int maxmatch=0;
-    int match=0;
-    for(int i=0;i<s1.size();i++)
-    {
-        match = 0;
-        for(int j=0;j<s2.size();j++)
-        {
-            if((i+j)<s1.size())
-            {
-                if (s1[i + j] == s2[j])
-                    match++;
-                else
-                    continue;
-            }
-
-        }
-        if(match>maxmatch)
-            maxmatch=match;
-    }
-    return maxmatch;
-}
-void getpossiblecmd(string str)
-{
-    string possible;
-    int maxmatch=0,match=0;
-    for(auto &e:str)
-        e=toupper(e);
-    for(auto iter=CMD.begin();iter!=CMD.end();++iter)
-    {
-        match=matchstrnum(iter->first,str);
-        if(match>maxmatch)
-        {
-            maxmatch=match;
-            possible=iter->first;
-        }
-    }
-    cout<< "I guess your input is : "<< possible <<endl;
-
-}
-
-void showhelp(string hlpcmd)
-{
-    
-    string tmpcmd;
-    for(auto &e:hlpcmd)
-        e=toupper(e);
-    if(CMD.count(hlpcmd)>0)
-    {
-        tmpcmd=CMD[hlpcmd];
-        cout<<tmpcmd<<endl;
-    }
-    else
-    {
-        for(auto iter=CMD.begin();iter!=CMD.end();++iter)
-            cout<<iter->first<<":\t\t"<<iter->second<<endl;
-    }
-        
-
-}
 int interface() {
-    //cout << "CLiTBot" << endl;
-    showrobot();
+    cout << "CLiTBot" << endl;
     //default game.map.name should be null
     int ifload = 0;
     char order[MAX_PATH_LEN], map_path[MAX_PATH_LEN], op_path[MAX_PATH_LEN];
@@ -553,40 +381,19 @@ int interface() {
             break;
         } else if (strcmp(order, "CD") == 0) {
             string path;
-            char a;
-            while ((a = cin.get()) != '\n')
-                if (a != ' ')
-                    path = path + a;
-            if(path.size()!=0)
-                std::filesystem::current_path(path);
+            cin >> path;
+            std::filesystem::current_path(path);
         } else if (strcmp(order, "LS") == 0) {
             cout << ".\n.." << endl;
             auto path = std::filesystem::current_path();
             for (const auto &entry: std::filesystem::directory_iterator(path)) {
                 std::cout << entry.path().filename().string() << std::endl;
             }
-        } else if (strcmp(order, "TREE") == 0) {
-            for (int i = 0; i < pathdepth; i++)
-                endofpath[i] = false;
-            path  dir = ".";
-            enumdir(dir,0);
-        }else if(strcmp(order, "HELP") == 0){
-            string command;
-            char a;
-            while ((a = cin.get()) != '\n')
-                if(a!=' ')
-                    command = command + a;
-            showhelp(command);
-        }else if(strcmp(order, "CLS") == 0){
-            cout<<"\e[2J\e[0;0H";
-        }
-        else {
-            char msg[] = "Unknown command!";
+        } else {
+            char msg[] = "Unknown command";
             error(msg);
-            getpossiblecmd(order);
         }
 
     }
     return 0;
 }
-
