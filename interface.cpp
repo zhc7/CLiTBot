@@ -2,10 +2,16 @@
 #include <fstream>
 #include <cstring>
 #include <filesystem>
+#include <string>
+#include <vector>
+#include <ctime>
+#include <map>
 #include "CLiTBot.h"
 #include "interface.h"
+#pragma warning(disable:4996)
 
 using namespace std;
+using namespace filesystem;
 int num_procs_limit;
 
 extern Game game;
@@ -173,50 +179,248 @@ void mapinfo(Map *map) {
     cout << map->op_limit[num_procs_limit - 1] << ']' << endl;
 }
 
-
-void operation(char op_path[]) {
-    int num_procs, *proc_id;
-    char order[10];
+void operation(char op_path[])
+{
+    int num_procs, * proc_id;
+    string* order;
     ofstream op;
     op.open(op_path, ios::out);
     if (!op.is_open())
         cout << "open file error";
-    else {
+    else
+    {
         cin >> num_procs;
-        while (num_procs > num_procs_limit) {
+        while (num_procs > num_procs_limit)
+        {
             cout << "process limit exceeded!" << endl;
             cout << "try to enter a value that is not bigger than " << num_procs_limit << endl;
             cin >> num_procs;
         }
         op << num_procs << endl;
         proc_id = new int[num_procs];//enter steps for each procs
-        for (int i = 0; i < num_procs; i++) {
+        for (int i = 0; i < num_procs; i++)
+        {
             cin >> proc_id[i];
-            for (int j = 0; j < proc_id[i]; j++) {
-                cin >> order;
+            order = new string[proc_id[i]];
+            for (int j = 0; j < proc_id[i]; j++)
+            {
+                cin >> order[j];
             }
-            while (proc_id[i] > game.map_init.op_limit[i]) {
+            while (proc_id[i] > game.map_init.op_limit[i])
+            {
                 cout << "steps of this process have exceeded!" << endl;
                 cout << "the steps of this process should not be bigger than " << game.map_init.op_limit[i] << endl;
                 cout << "please input steps and command again" << endl;
                 cin >> proc_id[i];
-                for (int j = 0; j < proc_id[i]; j++) {
-                    cin >> order;
+                delete[] order;
+                order = new string[proc_id[i]];
+                for (int j = 0; j < proc_id[i]; j++)
+                {
+                    cin >> order[j];
+                }
+            }
+            if (i != 0)
+            {
+                for (int j = 0; j < proc_id[i]; j++)
+                {
+
+                    string temp = "";
+                    for (int k = 0; k < order[j].size(); k++)
+                        temp.push_back(toupper(order[j][k]));
+
+                    while (temp != "JMP" && temp != "CALL" && temp != "MOV" && temp != "LIT" && temp != "TL" && temp != "TR")
+                    {
+                        cout << "the no." << j + 1 << " order is invalid, please try again: " << endl;
+                        cout << "correct orders are:(no need to be uppercased) JMP, CALL, MOV, LIT, TL, TR." << endl;
+                        temp = "";
+                        cin >> order[j];
+                        for (int k = 0; k < order[j].size(); k++)
+                            temp.push_back(toupper(order[j][k]));
+                    }
                 }
             }
             op << proc_id[i] << ' ';
-            for (int j = 0; j < proc_id[i]; j++) {
-                op << order << ' ';
+            for (int j = 0; j < proc_id[i]; j++)
+            {
+                op << order[j] << ' ';
             }
             op << endl;
+            delete[] order;
         }
         delete[] proc_id;
     }
     op.close();
+}//op is ok!!!
+void delay(int ms)
+{
+
+    clock_t start=0,end=0;
+    start=clock();
+    while(end-start<ms)
+        end=clock();
+}
+void showrobot()
+{
+    char olstr[100];
+    ifstream ifs("./res/robot.txt");
+    while(!ifs.eof())
+    {
+
+        ifs.getline(olstr,100);
+        for(auto &e:olstr)
+        {
+            if(e=='.')
+                e=' ';
+        }
+        //delay(100000);
+        delay(20);
+        cout <<"\t\t"<<olstr<<endl;
+    }
+
+}
+#define pathdepth 100
+bool endofpath[pathdepth];
+
+void printtree(int depth)
+{
+    for (int i = 0; i < depth; i++)
+    {
+
+        if(endofpath[i]==false)
+            cout << "|    ";
+        else
+            cout << "     ";
+    }
+
+}
+void enumdir(path& directory,int depth)
+{
+    file_status s;
+    path p;
+#if defined(_WIN32) && !defined(__CYGWIN__)
+    wstring str;
+#else
+    string str;
+#endif
+    vector<path> curdir;
+    vector<path> curfile;
+    for (auto it = directory_iterator(directory); it != directory_iterator(); ++it)
+    {
+        s = it->symlink_status();
+        switch (s.type())
+        {
+        case file_type::regular:
+            curfile.push_back(*it);
+            break;
+
+        case file_type::directory:
+            curdir.push_back(*it);
+            break;
+        }
+    }
+    for (int i = 0; i < curfile.size(); i++)
+    {
+
+        printtree(depth);
+        str = curfile[i].filename();
+        cout << "\033[32m";
+        wcout << "|-" << str.c_str() << endl;
+        cout << "\033[37m";
+    }
+    for (int i = 0; i < curdir.size(); i++)
+    {
+        if (i + 1 == curdir.size())
+            endofpath[depth] = true;
+        printtree(depth);
+        str = curdir[i].filename();
+ 
+        wcout << "|-" << str.c_str() << endl;
+
+        enumdir(curdir[i], depth + 1);
+    }
+
+
+ 
 }
 
+map<string,string> CMD={{"LOAD","load the map!"},
+                            {"AUTOSAVE","automatic save to file"},
+                            {"LIMIT","limit the size!"},
+                            {"STATUS","get status"},
+                            {"OP","op run"},
+                            {"RUN","run the game"},
+                            {"EXIT","exit the game"},
+                            {"CD","come to directory"},
+                            {"LS","list file of current directory!"},
+                            {"TREE","display the file tree!"},
+                            {"HELP","help system"},
+                            {"CLS","clear the screen!"}
+                            };
+
+int matchstrnum(string s1,string s2)
+{
+    int maxmatch=0;
+    int match=0;
+    for(int i=0;i<s1.size();i++)
+    {
+        match = 0;
+        for(int j=0;j<s2.size();j++)
+        {
+            if((i+j)<s1.size())
+            {
+                if (s1[i + j] == s2[j])
+                    match++;
+                else
+                    continue;
+            }
+
+        }
+        if(match>maxmatch)
+            maxmatch=match;
+    }
+    return maxmatch;
+}
+void getpossiblecmd(string str)
+{
+    string possible;
+    int maxmatch=0,match=0;
+    for(auto &e:str)
+        e=toupper(e);
+    for(auto iter=CMD.begin();iter!=CMD.end();++iter)
+    {
+        match=matchstrnum(iter->first,str);
+        if(match>maxmatch)
+        {
+            maxmatch=match;
+            possible=iter->first;
+        }
+    }
+    cout<< "I guess your input is : "<< possible <<endl;
+
+}
+
+void showhelp(string hlpcmd)
+{
+    
+    string tmpcmd;
+    for(auto &e:hlpcmd)
+        e=toupper(e);
+    if(CMD.count(hlpcmd)>0)
+    {
+        tmpcmd=CMD[hlpcmd];
+        cout<<tmpcmd<<endl;
+    }
+    else
+    {
+        for(auto iter=CMD.begin();iter!=CMD.end();++iter)
+            cout<<iter->first<<":\t\t"<<iter->second<<endl;
+    }
+        
+
+}
 int interface() {
-    cout << "CLiTBot" << endl;
+    //cout << "CLiTBot" << endl;
+    showrobot();
     //default game.map.name should be null
     int ifload = 0;
     char order[MAX_PATH_LEN], map_path[MAX_PATH_LEN], op_path[MAX_PATH_LEN];
@@ -349,19 +553,40 @@ int interface() {
             break;
         } else if (strcmp(order, "CD") == 0) {
             string path;
-            cin >> path;
-            std::filesystem::current_path(path);
+            char a;
+            while ((a = cin.get()) != '\n')
+                if (a != ' ')
+                    path = path + a;
+            if(path.size()!=0)
+                std::filesystem::current_path(path);
         } else if (strcmp(order, "LS") == 0) {
             cout << ".\n.." << endl;
             auto path = std::filesystem::current_path();
             for (const auto &entry: std::filesystem::directory_iterator(path)) {
                 std::cout << entry.path().filename().string() << std::endl;
             }
-        } else {
-            char msg[] = "Unknown command";
+        } else if (strcmp(order, "TREE") == 0) {
+            for (int i = 0; i < pathdepth; i++)
+                endofpath[i] = false;
+            path  dir = ".";
+            enumdir(dir,0);
+        }else if(strcmp(order, "HELP") == 0){
+            string command;
+            char a;
+            while ((a = cin.get()) != '\n')
+                if(a!=' ')
+                    command = command + a;
+            showhelp(command);
+        }else if(strcmp(order, "CLS") == 0){
+            cout<<"\e[2J\e[0;0H";
+        }
+        else {
+            char msg[] = "Unknown command!";
             error(msg);
+            getpossiblecmd(order);
         }
 
     }
     return 0;
 }
+
