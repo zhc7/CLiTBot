@@ -295,7 +295,7 @@ void operation(char op_path[])
     ofstream op;
     op.open(op_path, ios::out);
     if (!op.is_open())
-        cout << "open file error";
+        cout << "open file error"<<endl;
     else
     {
         cin >> num_procs;
@@ -372,20 +372,27 @@ void showrobot()
 {
     char olstr[100];
     ifstream ifs("./res/robot.txt");
-    while(!ifs.eof())
+    if(ifs.good())
     {
-
-        ifs.getline(olstr,100);
-        for(auto &e:olstr)
+        while(!ifs.eof())
         {
-            if(e=='.')
-                e=' ';
-        }
-        //delay(100000);
-        delay(20);
-        cout <<"\t\t"<<olstr<<endl;
-    }
 
+            ifs.getline(olstr,100);
+            for(auto &e:olstr)
+            {
+                if(e=='.')
+                    e=' ';
+            }
+            //delay(100000);
+            delay(20);
+            cout <<"\t\t"<<olstr<<endl;
+        }
+
+    }
+    else 
+    {
+        cout<<"res or robot.txt is missing! make sure it exists"<<endl;
+    }    
 }
 #define pathdepth 100
 bool endofpath[pathdepth];
@@ -480,7 +487,12 @@ int matchstrnum(string s1,string s2)
                 if (s1[i + j] == s2[j])
                     match++;
                 else
+                {
+                    if(match>maxmatch)
+                         maxmatch=match;
+                    match=0;
                     continue;
+                }
             }
 
         }
@@ -544,7 +556,26 @@ int interface() {
         }
         //load
         if (strcmp(order, "LOAD") == 0) {
-            cin >> map_path;
+            
+            int state=0;
+            string command;
+            char a;
+            while ((a = cin.get()) != '\n')
+            {
+                if(a!=' ')
+                {
+                    command = command + a;  
+                    state=1;  
+                } 
+                else
+                {
+                    if(state!=0)
+                    {
+                        command = command + a; 
+                    }
+                }
+            }
+            strcpy(map_path, command.c_str());
             ifload = load(map_path);
             if (ifload) {
                 char msg[] = "Map successfully loaded";
@@ -553,7 +584,25 @@ int interface() {
         }
             //autosave
         else if (strcmp(order, "AUTOSAVE") == 0) {
-            cin >> autosave_code;
+            int state=0;
+            string command;
+            char a;
+            while ((a = cin.get()) != '\n')
+            {
+                if(a!=' ')
+                {
+                    command = command + a;  
+                    state=1;  
+                } 
+                else
+                {
+                    if(state!=0)
+                    {
+                        command = command + a; 
+                    }
+                }
+            }
+            strcpy(autosave_code, command.c_str());
             if (strcmp(autosave_code, "OFF") == 0)
                 game.save_path[0] = '!';
             else if (strcmp(autosave_code, "ON") == 0)
@@ -572,11 +621,48 @@ int interface() {
                 mapinfo(&game.map_init);
             }
         } else if (strcmp(order, "OP") == 0) {
-            cin >> op_path;
+            int state=0;
+            string command;
+            char a;
+            while ((a = cin.get()) != '\n')
+            {
+                if(a!=' ')
+                {
+                    command = command + a;  
+                    state=1;  
+                } 
+                else
+                {
+                    if(state!=0)
+                    {
+                        command = command + a; 
+                    }
+                }
+            }
+            strcpy(op_path, command.c_str());
             operation(op_path);
         } else if (strcmp(order, "RUN") == 0) {
-            int i;
-            cin >> op_path;
+            
+            int state=0;
+            string command;
+            char a;
+            while ((a = cin.get()) != '\n')
+            {
+                if(a!=' ')
+                {
+                    command = command + a;  
+                    state=1;  
+                } 
+                else
+                {
+                    if(state!=0)
+                    {
+                        command = command + a; 
+                    }
+                }
+            }
+            strcpy(op_path, command.c_str());
+
             if (!ifload) {
                 char msg[] = "You have not loaded any map yet.";
                 error(msg);
