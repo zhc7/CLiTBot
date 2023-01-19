@@ -61,34 +61,72 @@ int load(char map_path[]) {
         cout << "try to enter the proper map name" << endl;
         strcpy(game.map_name, "");
         return 0;
-    } else {
+    }
+    else {
         strcpy(game.map_name, map_path);
         fin >> game.map_init.row >> game.map_init.col >> game.map_init.num_lights;
         fin >> num_procs_limit;
         //heights of row
         for (int i = 0; i < game.map_init.row; i++) {
             for (int j = 0; j < game.map_init.col; j++) {
+                game.map_init.cells[i][j].height=0;
+                game.map_init.cells[i][j].light_id = 0;
+            }
+        }
+
+        for (int i = 0; i < game.map_init.num_lights; i++) {
+            game.map_init.lights[i].pos.x = -1;
+            game.map_init.lights[i].pos.y = -1;
+            game.map_init.lights[i].lighten = 0;
+
+        }
+
+        for (int i = 0; i < game.map_init.row; i++) {
+            for (int j = 0; j < game.map_init.col; j++) {
                 fin >> game.map_init.cells[i][j].height;
             }
         }
-        //
+        
         for (int i = 0; i < game.map_init.num_lights; i++) {
             fin >> game.map_init.lights[i].pos.x >> game.map_init.lights[i].pos.y;
             game.map_init.lights[i].lighten = 0;
+            
         }
+
+        // for (int i = 0; i < game.map_init.num_lights; i++) {
+        //     cout << game.map_init.lights[i].pos.x << ' ' << game.map_init.lights[i].pos.y << endl;
+        // }//
+       
         for (int i = 0; i < game.map_init.row; i++) {
             for (int j = 0; j < game.map_init.col; j++) {
-                if ((j != game.map_init.lights[i].pos.x) || (i != game.map_init.lights[i].pos.y))
+                int flag = 0;
+                for (int k = 0; k < game.map_init.num_lights; k++)
+                {
+                    if ((j != game.map_init.lights[k].pos.x) || (i != game.map_init.lights[k].pos.y))
+                        flag++;
+                    else
+                        break;
+                }
+                if(flag==game.map_init.num_lights)
                     game.map_init.cells[i][j].light_id = -1;
             }
         }
+
+        // for (int i = 0; i < game.map_init.row; i++) {
+        //     for (int j = 0; j < game.map_init.col; j++) {
+        //         cout << game.map_init.cells[i][j].light_id << ' ';
+        //     }
+        //     cout << endl;
+        // }//
+
         for (int i = 0; i < num_procs_limit; i++) {
             fin >> game.map_init.op_limit[i];
         }
+
         fin >> game.map_init.robot.pos.x >> game.map_init.robot.pos.y;
         fin >> direct;
         direct = convert(direct);
-        game.map_init.robot.dir = (Direction) direct;
+        game.map_init.robot.dir = (Direction)direct;
         for (int i = 0; i < game.map_init.row; i++) {
             for (int j = 0; j < game.map_init.col; j++) {
                 if ((i != game.map_init.robot.pos.x) || (j != game.map_init.robot.pos.y))
@@ -106,8 +144,8 @@ void mapinfo(Map *map) {
     cout << "Map Name:" << ' ' << game.map_name << endl;
     cout << "Autosave:" << ' ' << game.save_path << endl;
     cout << "Step Limit:" << ' ' << game.limit << endl;
-    cout << map->row << ' ' << map->col << ' ' << map->num_lights << ' ' << num_procs_limit << endl;
-    for (i = 0; i < map->row; i++) {
+   // cout << map->row << ' ' << map->col << ' ' << map->num_lights << ' ' << num_procs_limit << endl;
+    for (i = 0; i < map->row; i++) {//i represents y, j represents x
         for (int j = 0; j < map->col; j++) {
             if (map->cells[i][j].height == 0)
                 cout << ' ';
@@ -179,6 +217,77 @@ void mapinfo(Map *map) {
     cout << map->op_limit[num_procs_limit - 1] << ']' << endl;
 }
 
+void mapinfo_run(Map* map)
+{
+    for (int i = 0; i < map->row; i++) {//i represents y, j represents x
+        for (int j = 0; j < map->col; j++) {
+            if (map->cells[i][j].height == 0)
+                cout << ' ';
+            else {
+                //while robot is on this coordinate
+                if ((map->robot.pos.x == j) && (map->robot.pos.y == i)) {
+                    if (map->cells[i][j].light_id == -1)
+                        cout << "\e[91;100;1m"; //red, grey
+                    else if (map->cells[i][j].light_id != -1)//there is a light on this place
+                    {
+                        for (int k = 0; k < map->num_lights; k++) {
+                            if ((map->lights[k].pos.x == j) && (map->lights[k].pos.y == i) &&
+                                (map->lights[k].lighten))//it is lightened
+                            {
+                                cout << "\e[91;103;1m";//red, yellow
+                                break;
+                            } else if ((map->lights[k].pos.x == j) && (map->lights[k].pos.y == i) &&
+                                       (!map->lights[k].lighten)) {
+                                cout << "\e[91;104;1m";//red, blue
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    if (map->cells[i][j].light_id == -1)
+                        cout << "\e[92;100;1m"; //green, grey
+                    else if (map->cells[i][j].light_id != -1)//there is a light on this place
+                    {
+                        for (int k = 0; k < map->num_lights; k++) {
+                            if ((map->lights[k].pos.x == j) && (map->lights[k].pos.y == i) &&
+                                (map->lights[k].lighten))//it is lightened
+                            {
+                                cout << "\e[92;103;1m";//green, yellow
+                                break;
+                            } else if ((map->lights[k].pos.x == j) && (map->lights[k].pos.y == i) &&
+                                       (!map->lights[k].lighten)) {
+                                cout << "\e[92;104;1m";//green, blue;
+                                break;
+                            }
+                        }
+                    }
+                }
+                cout << map->cells[i][j].height;
+                cout << "\e[0m";
+            }
+        }
+        cout << endl;
+    }
+    cout << "Robot is facing ";
+    switch (map->robot.dir) {
+        case LEFT:
+            cout << "left." << endl;
+            break;
+        case RIGHT:
+            cout << "right." << endl;
+            break;
+        case DOWN:
+            cout << "down." << endl;
+            break;
+        case UP:
+            cout << "up." << endl;
+            break;
+    }
+    cout<<endl;
+}
+    
+  
+
 void operation(char op_path[])
 {
     int num_procs, * proc_id;
@@ -186,7 +295,7 @@ void operation(char op_path[])
     ofstream op;
     op.open(op_path, ios::out);
     if (!op.is_open())
-        cout << "open file error";
+        cout << "open file error"<<endl;
     else
     {
         cin >> num_procs;
@@ -263,20 +372,27 @@ void showrobot()
 {
     char olstr[100];
     ifstream ifs("./res/robot.txt");
-    while(!ifs.eof())
+    if(ifs.good())
     {
-
-        ifs.getline(olstr,100);
-        for(auto &e:olstr)
+        while(!ifs.eof())
         {
-            if(e=='.')
-                e=' ';
-        }
-        //delay(100000);
-        delay(20);
-        cout <<"\t\t"<<olstr<<endl;
-    }
 
+            ifs.getline(olstr,100);
+            for(auto &e:olstr)
+            {
+                if(e=='.')
+                    e=' ';
+            }
+            //delay(100000);
+            delay(20);
+            cout <<"\t\t"<<olstr<<endl;
+        }
+
+    }
+    else 
+    {
+        cout<<"res or robot.txt is missing! make sure it exists"<<endl;
+    }    
 }
 #define pathdepth 100
 bool endofpath[pathdepth];
@@ -343,12 +459,12 @@ void enumdir(path& directory,int depth)
  
 }
 
-map<string,string> CMD={{"LOAD","load the map!"},
+map<string,string> CMD={{"LOAD","enter your file path to load it"},
                             {"AUTOSAVE","automatic save to file"},
-                            {"LIMIT","limit the size!"},
-                            {"STATUS","get status"},
-                            {"OP","op run"},
-                            {"RUN","run the game"},
+                            {"LIMIT","enter the maximum steps of each proc"},
+                            {"STATUS","get status of the map currently"},
+                            {"OP","enter your orders to run the game"},
+                            {"RUN","run the game!"},
                             {"EXIT","exit the game"},
                             {"CD","come to directory"},
                             {"LS","list file of current directory!"},
@@ -371,7 +487,12 @@ int matchstrnum(string s1,string s2)
                 if (s1[i + j] == s2[j])
                     match++;
                 else
+                {
+                    if(match>maxmatch)
+                         maxmatch=match;
+                    match=0;
                     continue;
+                }
             }
 
         }
@@ -435,7 +556,26 @@ int interface() {
         }
         //load
         if (strcmp(order, "LOAD") == 0) {
-            cin >> map_path;
+            
+            int state=0;
+            string command;
+            char a;
+            while ((a = cin.get()) != '\n')
+            {
+                if(a!=' ')
+                {
+                    command = command + a;  
+                    state=1;  
+                } 
+                else
+                {
+                    if(state!=0)
+                    {
+                        command = command + a; 
+                    }
+                }
+            }
+            strcpy(map_path, command.c_str());
             ifload = load(map_path);
             if (ifload) {
                 char msg[] = "Map successfully loaded";
@@ -444,7 +584,25 @@ int interface() {
         }
             //autosave
         else if (strcmp(order, "AUTOSAVE") == 0) {
-            cin >> autosave_code;
+            int state=0;
+            string command;
+            char a;
+            while ((a = cin.get()) != '\n')
+            {
+                if(a!=' ')
+                {
+                    command = command + a;  
+                    state=1;  
+                } 
+                else
+                {
+                    if(state!=0)
+                    {
+                        command = command + a; 
+                    }
+                }
+            }
+            strcpy(autosave_code, command.c_str());
             if (strcmp(autosave_code, "OFF") == 0)
                 game.save_path[0] = '!';
             else if (strcmp(autosave_code, "ON") == 0)
@@ -463,11 +621,48 @@ int interface() {
                 mapinfo(&game.map_init);
             }
         } else if (strcmp(order, "OP") == 0) {
-            cin >> op_path;
+            int state=0;
+            string command;
+            char a;
+            while ((a = cin.get()) != '\n')
+            {
+                if(a!=' ')
+                {
+                    command = command + a;  
+                    state=1;  
+                } 
+                else
+                {
+                    if(state!=0)
+                    {
+                        command = command + a; 
+                    }
+                }
+            }
+            strcpy(op_path, command.c_str());
             operation(op_path);
         } else if (strcmp(order, "RUN") == 0) {
-            int i;
-            cin >> op_path;
+            
+            int state=0;
+            string command;
+            char a;
+            while ((a = cin.get()) != '\n')
+            {
+                if(a!=' ')
+                {
+                    command = command + a;  
+                    state=1;  
+                } 
+                else
+                {
+                    if(state!=0)
+                    {
+                        command = command + a; 
+                    }
+                }
+            }
+            strcpy(op_path, command.c_str());
+
             if (!ifload) {
                 char msg[] = "You have not loaded any map yet.";
                 error(msg);
@@ -475,79 +670,7 @@ int interface() {
             }
             Result result = robot_run(op_path);
             cout << "Step(s) used:" << ' ' << result.steps << endl;
-            for (i = 0; i < game.map_run.row; i++) {
-                for (int j = 0; j < game.map_run.col; j++) {
-                    if (game.map_run.cells[i][j].height == 0)
-                        cout << ' ';
-                    else {
-                        //while robot is on this coordinate
-                        if ((game.map_run.robot.pos.x == j) && (game.map_run.robot.pos.y == i)) {
-                            if (game.map_run.cells[i][j].light_id == -1)
-                                cout << "\e[91;100;1m"; //red, grey
-                            else if (game.map_run.cells[i][j].light_id != -1)//there is a light on this place
-                            {
-                                for (int k = 0; k < game.map_run.num_lights; k++) {
-                                    if ((game.map_run.lights[k].pos.x == j) && (game.map_run.lights[k].pos.y == i) &&
-                                        (game.map_run.lights[k].lighten))//it is lightened
-                                        cout << "\e[91;103;1m";//red, yellow
-                                    else if ((game.map_run.lights[k].pos.x == j) &&
-                                             (game.map_run.lights[k].pos.y == i) && (!game.map_run.lights[k].lighten))
-                                        cout << "\e[91;104;1m";//red, blue
-                                }
-                            }
-                        } else {
-                            if ((game.map_run.robot.pos.x == j) && (game.map_run.robot.pos.y == i)) {
-                                if (game.map_run.cells[i][j].light_id == -1)
-                                    cout << "\e[92;100;1m"; //red, grey
-                                else if (game.map_run.cells[i][j].light_id != -1)//there is a light on this place
-                                {
-                                    for (int k = 0; k < game.map_run.num_lights; k++) {
-                                        if ((game.map_run.lights[k].pos.x == j) &&
-                                            (game.map_run.lights[k].pos.y == i) &&
-                                            (game.map_run.lights[k].lighten))//it is lightened
-                                            cout << "\e[92;103;1m";//red, yellow
-                                        else if ((game.map_run.lights[k].pos.x == j) &&
-                                                 (game.map_run.lights[k].pos.y == i) &&
-                                                 (!game.map_run.lights[k].lighten))
-                                            cout << "\e[92;104;1m";//red, blue
-                                    }
-                                }
-                            }
-                        }
-                        cout << game.map_run.cells[i][j].height;
-                        cout << "\e[0m";
-                    }
-                }
-                cout << endl;
-            }
-            cout << "Robot is facing ";
-            switch (game.map_run.robot.dir) {
-                case LEFT:
-                    cout << "left." << endl;
-                    break;
-                case RIGHT:
-                    cout << "right." << endl;
-                    break;
-                case DOWN:
-                    cout << "down." << endl;
-                    break;
-                case UP:
-                    cout << "up." << endl;
-                    break;
-            }
-            string msg;
-            switch (result.result) {
-                case LIGHT:
-                    msg = "Congratulations! You Won!";
-                    break;
-                case LIMIT:
-                    msg = "Step limitation reached";
-                    break;
-                case DARK:
-                    msg = "Execution completed";
-                    break;
-            }
-            info(msg);
+            mapinfo_run(&game.map_run);
         } else if (strcmp(order, "EXIT") == 0) {
             cout << "Quiting..." << endl;
             break;

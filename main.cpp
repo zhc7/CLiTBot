@@ -746,9 +746,9 @@ OpSeq parse(const char *path) {
         for (int j = 0; j < n; j++) {
             fin >> c;
             OpType op;
-            switch (c[0]) {
+            switch (toupper(c[0])) {
                 case 'T':
-                    if (c[1] == 'L') {
+                    if (toupper(c[1]) == 'L') {
                         op = TL;
                     } else {
                         op = TR;
@@ -768,7 +768,7 @@ OpSeq parse(const char *path) {
                     break;
 
                 default:
-                    op = (OpType)(c[1] - '0' + CALL);
+                    op = (OpType)(toupper(c[1]) - '0' + CALL);
                     break;
             }
             seq.procs[i].ops[j] = op;
