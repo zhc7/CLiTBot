@@ -675,6 +675,46 @@ void save(const char *path) {
 
     }
 
+    Pixel[IMAGE_WIDTH][IMAGE_HEIGHT] temp;
+    for (int X = 0; X < IMAGE_WIDTH; X++) {
+        for (int Y = 0; Y < IMAGE_HEIGHT; Y++) {
+            temp[X][Y] = pixelChart[X][Y];
+        }
+    }
+
+    for (int X = 1; X < IMAGE_WIDTH - 1; X++) {
+        for (int Y = 1; Y < IMAGE_HEIGHT - 1; Y++) {
+            pixelChart[X][Y].colorB = (temp[X-1][Y-1].colorB +
+                                       temp[X-1][Y].colorB +
+                                       temp[X-1][Y+1].colorB +
+                                       temp[X][Y-1].colorB +
+                                       temp[X][Y].colorB +
+                                       temp[X][Y+1].colorB +
+                                       temp[X+1][Y-1].colorB +
+                                       temp[X+1][Y].colorB +
+                                       temp[X+1][Y+1].colorB) / 9;
+            pixelChart[X][Y].colorG = (temp[X-1][Y-1].colorG +
+                                       temp[X-1][Y].colorG +
+                                       temp[X-1][Y+1].colorG +
+                                       temp[X][Y-1].colorG +
+                                       temp[X][Y].colorG +
+                                       temp[X][Y+1].colorG +
+                                       temp[X+1][Y-1].colorG +
+                                       temp[X+1][Y].colorG +
+                                       temp[X+1][Y+1].colorG) / 9;
+            pixelChart[X][Y].colorR = (temp[X-1][Y-1].colorR +
+                                       temp[X-1][Y].colorR +
+                                       temp[X-1][Y+1].colorR +
+                                       temp[X][Y-1].colorR +
+                                       temp[X][Y].colorR +
+                                       temp[X][Y+1].colorR +
+                                       temp[X+1][Y-1].colorR +
+                                       temp[X+1][Y].colorR +
+                                       temp[X+1][Y+1].colorR) / 9;
+
+        }
+    }
+
     for (int Y = IMAGE_HEIGHT - 1; Y >= 0; Y--) {
 
         for (int X = 0; X < IMAGE_WIDTH; X++) {
