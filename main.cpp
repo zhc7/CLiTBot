@@ -675,7 +675,7 @@ void save(const char *path) {
 
     }
 
-    Pixel[IMAGE_WIDTH][IMAGE_HEIGHT] temp;
+    Pixel temp[IMAGE_WIDTH][IMAGE_HEIGHT];
     for (int X = 0; X < IMAGE_WIDTH; X++) {
         for (int Y = 0; Y < IMAGE_HEIGHT; Y++) {
             temp[X][Y] = pixelChart[X][Y];
@@ -731,7 +731,38 @@ void save(const char *path) {
 
 void auto_save() {
     if (!game.save_path[0]) return;
-    save(game.save_path);
+    string save_path = game.save_path;
+    int save_id = game.auto_save_id;
+    int ptr = 0;
+    while (save_path[++ptr] != '%');
+    int len = save_path[ptr + 1] - '0';
+    string path;
+    for (int i = 0; i < ptr; i++) {
+        path += save_path[i];
+    }
+    char arr[len];
+    int arrptr = 0;
+    while (save_id) {
+        arr[arrptr++] = save_id % 10 + '0';
+        save_id /= 10;
+    }
+    for (int i = 0; i < len - arrptr; i++) {
+        path += '0';
+    }
+    while (arrptr) {
+        path += arr[--arrptr];
+    }
+    ptr += 3;
+    while (save_path[ptr]) {
+        path += save_path[ptr];
+        ptr++;
+    }
+    path += '\0';
+    char p[MAX_PATH_LEN];
+    for (int i = 0; i < path.size(); i++) {
+        p[i] = path[i];
+    }
+    save(p);
 }
 
 
@@ -918,7 +949,6 @@ Result robot_run(const char *path) {
 
 // part 3 - User Interface
 // WIP
-
 
 int main() {
     game.limit = 100;
