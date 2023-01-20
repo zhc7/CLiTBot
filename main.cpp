@@ -562,7 +562,7 @@ void drawRobot() {
     int posz = game.map_run.cells[posx][posy].height - 1;
 
     ifstream robotbmp;
-    robotbmp.open(robot_source, ios::binary);
+    robotbmp.open(root_path + robot_source, ios::binary);
 
     base_x = BASE_POINT_X - (posx - posy) * BRICK_EXTENSION_X;
     base_y = BASE_POINT_Y + (posx + posy) * BRICK_EXTENSION_Y -
