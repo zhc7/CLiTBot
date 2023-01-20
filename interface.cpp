@@ -592,8 +592,10 @@ void showhelp(string hlpcmd)
 
 
 }
+
+std::string root_path = "";
 int interface() {
-    root_path = std::filesystem::current_path().string();
+    root_path = std::filesystem::current_path().string() + "/";
     showrobot();
     //default game.map.name should be null
     int ifload = 0;
