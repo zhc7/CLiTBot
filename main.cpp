@@ -7,7 +7,8 @@
 using namespace std;
 
 Game game; // 全局唯一的Game变量
-const char *robot_source = "/res/robot.bmp";
+const char *robot_source = "res/robot.bmp";
+string map_info_path;
 
 // API Declaration
 
@@ -535,7 +536,12 @@ void Brick::draw() {
 
 void drawRobot() {
 
+    // cout << "drawRobot called" << endl;
+
     Robot &robot = game.map_run.robot;
+
+    // cout << robot.pos.x << " " << robot.pos.y << endl;
+
 
     int off_x = 0, off_y = 0;
 
@@ -564,6 +570,7 @@ void drawRobot() {
     ifstream robotbmp;
     robotbmp.open(robot_source, ios::binary);
 
+
     base_x = BASE_POINT_X - (posx - posy) * BRICK_EXTENSION_X;
     base_y = BASE_POINT_Y + (posx + posy) * BRICK_EXTENSION_Y -
              posz * BRICK_EXTENSION_Z;
@@ -580,6 +587,7 @@ void drawRobot() {
             int rby = (j / (ROBOT_SIZE_Y * 2.0)) * 700 + off_y;
             robotbmp.seekg(0x36 + (rby * 700 + rbx) * 3);
             robotbmp.read((char *) &temp, 3);
+            // cout << (int)temp.colorB << " " << (int)temp.colorG << " " << (int)temp.colorR << endl;
 
             if (temp.colorB != 164 || temp.colorG != 73 || temp.colorR != 163) {
                 pixelChart[i + base_x][ROBOT_SIZE_Y * 2 - j + base_y] = temp;
@@ -618,6 +626,7 @@ void igniteBrick(int x, int y, int z) {
 
 void save(const char *path) {
 
+    if (path[0] == '%') return;
     brickCount = 0;
 
     for (int i = 0; i < IMAGE_WIDTH; i++) {
@@ -630,6 +639,7 @@ void save(const char *path) {
     BMPInfoHeader bih = {0x28, IMAGE_WIDTH, IMAGE_HEIGHT, 1, 24, 0,
                          IMAGE_WIDTH * IMAGE_HEIGHT * 3, 0, 0, 0, 0};
 
+    // cout << path << endl;
     ofstream mybmp(path, ios::binary);
 
     mybmp.write((char *) &bfh, sizeof(BMPFileHeader));
@@ -643,16 +653,18 @@ void save(const char *path) {
 
             for (int k = 0; k < game.map_run.cells[i][j].height; k++) {
 
-                BrickStatus s;
-
-                if (game.map_run.cells[i][j].light_id == -1) {
-                    s = NONLIGHT;
-                } else if (game.map_run.lights
-                [game.map_run.cells[i][j].light_id].lighten) {
-                    s = BRIGHT;
-                } else s = DIM;
-
-                bricks[brickCount++] = Brick(j, i, k, s);
+                BrickStatus s = NONLIGHT;
+                {
+                    for (int l = 0; l < game.map_run.num_lights; l++) {
+                        if (game.map_run.lights[l].pos.x == j && game.map_run.lights[l].pos.y == i) {
+                            if (game.map_run.lights[l].lighten) s = BRIGHT;
+                            else s = DIM;
+                            break;
+                        }
+                    }
+                }
+                // cout << i << " " << j << " " << k << " " << s << endl;
+                bricks[brickCount++] = Brick(i, j, k, s);
 
             }
 
@@ -667,6 +679,7 @@ void save(const char *path) {
     for (int i = 0; i < brickCount; i++) {
 
         if (robot < bricks[i] && !robotDrawn) {
+        //if (true) {
 
             drawRobot();
             robotDrawn = true;
@@ -675,6 +688,10 @@ void save(const char *path) {
 
         bricks[i].draw();
 
+    }
+    if (!robotDrawn) {
+        drawRobot();
+        robotDrawn = true;
     }
 
     Pixel temp[IMAGE_WIDTH][IMAGE_HEIGHT];
@@ -732,8 +749,10 @@ void save(const char *path) {
 // }
 
 void auto_save() {
+    // cout << "auto_save called" << endl;
     if (strcmp(path_of_autosave_on,game.save_path)==0||strcmp(path_of_autosave_off,game.save_path)==0) return;
-    save(game.save_path);
+    // cout << "auto_save save called" << endl;
+    // save(game.save_path);
     string save_path = game.save_path;
     int save_id = game.auto_save_id;
     int ptr = 0;
@@ -766,6 +785,9 @@ void auto_save() {
         p[i] = path[i];
     }
     save(p);
+    // cout << p << endl;
+    game.auto_save_id++;
+    map_info_path=path;
 }
 
 
@@ -853,7 +875,9 @@ OpSeq parse(const char *path) {
 
 Result robot_run(const char *path) {
     game.auto_save_id = 0;
+
     game.map_run = game.map_init;
+    auto_save();
     int light_map[MAX_ROW][MAX_COL] = {0};
     int light_count = game.map_run.num_lights;
     for (int i = 0; i < game.map_run.num_lights; i++) {
@@ -873,10 +897,12 @@ Result robot_run(const char *path) {
             switch (op) {
                 case TL:
                     game.map_run.robot.dir = (Direction)((r.dir + 1) % 4);
+                    auto_save();
                     break;
 
                 case TR:
                     game.map_run.robot.dir = (Direction)((r.dir + 3) % 4);
+                    auto_save();
                     break;
 
                 case MOV:
@@ -893,6 +919,7 @@ Result robot_run(const char *path) {
                     r.pos.x = x;
                     r.pos.y = y;
                     game.map_run.cells[y][x].robot = true;
+                    auto_save();
                     break;
 
                 case JMP:
@@ -915,15 +942,24 @@ Result robot_run(const char *path) {
                     r.pos.x = x;
                     r.pos.y = y;
                     game.map_run.cells[y][x].robot = true;
+                    auto_save();
                     break;
 
                 case LIT:
                     game.map_run.cells[r.pos.y][r.pos.x].light_id = 1;
                     pl = light_map[r.pos.y][r.pos.x];
                     if (pl) {
+                        for (int l = 0; l < game.map_run.num_lights; l++) {
+                            if (game.map_run.lights[l].pos.y == game.map_run.robot.pos.y &&
+                                game.map_run.lights[l].pos.x == game.map_run.robot.pos.x) {
+                                    if (!game.map_run.lights[l].lighten) light_count--;
+                                    break;
+                            }
+                        }
                         game.map_run.lights[pl - 1].lighten = true;
-                        light_count--;
+
                     }
+                    auto_save();
                     break;
 
                 default:
@@ -940,7 +976,7 @@ Result robot_run(const char *path) {
                     i--; // offset i++ in for
                     break;
             }
-            auto_save();
+            // auto_save();
             step++;
             if (step >= game.limit) {
                 return Result{step, LIMIT};

@@ -16,6 +16,8 @@ int num_procs_limit;
 
 extern Game game;
 
+extern string map_info_path;
+
 extern Result robot_run(const char *path);
 
 extern void auto_save();
@@ -37,6 +39,7 @@ void warn(const char s[]) {
 void error(const char s[]) {
     cout << "\e[91;1m" << "Error: " << s << "\e[0m" << endl;
 }
+
 
 void info(const char s[]) {
     cout << "\e[96;1m" << "Info: " << s << "\e[0m" << endl;
@@ -146,11 +149,13 @@ int load(char map_path[]) {
                 {
                     game.map_init.cells[i][j].robot = true;
                     //cout<<game.map_init.robot.pos.x<<game.map_init.robot.pos.y
+                    game.map_run=game.map_init;
                     return 1;
                 }
 
             }
         }
+        game.map_run=game.map_init;
         return 1;
     }
 }
@@ -163,10 +168,10 @@ void mapinfo(Map *map) {
     else if(strcmp(path_of_autosave_on,game.save_path)==0)
         cout<<"Autosave: ON"<<endl;
     else
-        cout << "Autosave:" << ' ' << game.save_path << endl;
+        cout << "Autosave:" << ' ' << map_info_path << endl;
 
     cout << "Step Limit:" << ' ' << game.limit << endl;
-   // cout << map->row << ' ' << map->col << ' ' << map->num_lights << ' ' << num_procs_limit << endl;
+    cout << map->row << ' ' << map->col << ' ' << map->num_lights << ' ' << num_procs_limit << endl;
     for (int i = 0; i < map->row; i++) {//i represents y, j represents x
         for (int j = 0; j < map->col; j++) {
             if (map->cells[i][j].height == 0)
@@ -378,11 +383,11 @@ void operation(char op_path[])
             for (int j = 0; j < proc_id[i]; j++)
             {
 
-                 string temp = "";
+                string temp = "";
                 for (int k = 0; k < order[j].size(); k++)
                       temp.push_back(toupper(order[j][k]));
 
-                while (temp != "JMP" && temp != "CALL" && temp != "MOV" && temp != "LIT" && temp != "TL" && temp != "TR"&&strcmp((char*)temp[0],"P")!=0)
+                while (temp != "JMP" && temp != "CALL" && temp != "MOV" && temp != "LIT" && temp != "TL" && temp != "TR"&&temp[0]!='P')
                 {
                     cout << "the no." << j + 1 << " order is invalid, please try again: " << endl;
                     cout << "correct orders are:(no need to be uppercased) JMP, CALL, MOV, LIT, TL, TR." << endl;
@@ -392,6 +397,7 @@ void operation(char op_path[])
                         temp.push_back(toupper(order[j][k]));
                 }
             }
+
 
             //identify main
             op << proc_id[i] << ' ';
@@ -665,8 +671,6 @@ int interface() {
             else
             {
                 strcpy(game.save_path, autosave_code);
-                auto_save();
-                cout<<game.save_path<<endl;
             }
 
 
@@ -751,12 +755,13 @@ int interface() {
         } else if (strcmp(order, "EXIT") == 0) {
             cout << "Quiting..." << endl;
             break;
-        } else if (strcmp(order, "CD") == 0) {
+        }  else if (strcmp(order, "CD") == 0) {
             string path;
             char a;
             while ((a = cin.get()) != '\n')
                 if (a != ' ')
                     path = path + a;
+            if(path.size()!=0)
             if(path.size()!=0 && std::filesystem::exists(path) && std::filesystem::is_directory(path))
                 std::filesystem::current_path(path);
             else
