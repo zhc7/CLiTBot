@@ -2,6 +2,6 @@
 
 int interface();
 
-void warn(char s[]);
+void warn(const char s[]);
 
-void error(char s[]);
+void error(const char s[]);

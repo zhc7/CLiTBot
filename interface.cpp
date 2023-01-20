@@ -27,22 +27,22 @@ extern char path_of_autosave_off[MAX_PATH_LEN];
 
 bool if_run;
 //interface
-void warn(char s[]) {
+void warn(const char s[]) {
     cout << "\e[93;1m";
     cout << "Warning: ";
     cout << s << endl;
     cout << "\e[0m";
 }
 
-void error(char s[]) {
+void error(const char s[]) {
     cout << "\e[91;1m" << "Error: " << s << "\e[0m" << endl;
 }
 
-void info(char s[]) {
+void info(const char s[]) {
     cout << "\e[96;1m" << "Info: " << s << "\e[0m" << endl;
 }
 
-void info(string s) {
+void info(const string& s) {
     cout << "\e[96;1m" << "Info: " << s << "\e[0m" << endl;
 }
 
@@ -757,8 +757,10 @@ int interface() {
             while ((a = cin.get()) != '\n')
                 if (a != ' ')
                     path = path + a;
-            if(path.size()!=0)
+            if(path.size()!=0 && std::filesystem::exists(path) && std::filesystem::is_directory(path))
                 std::filesystem::current_path(path);
+            else
+                error("Directory does not exists.");
         } else if (strcmp(order, "LS") == 0) {
             cout << ".\n.." << endl;
             auto path = std::filesystem::current_path();
