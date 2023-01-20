@@ -31,4 +31,4 @@
 
 更加详细的内容请参看`git log`。其中`zhc7 <hc-zhang22@mails.tsinghua.edu.cn>或<bjhansen2012@outlook.com>`是张瀚宸，
 `Shenium <shenjh22@mails.tsinghua.edu.cn>`是申君皓，
-`zhengry22 <zhengry22@mails.tsinghua.edu.cn`是郑睿阳。
+`zhengry22 <zhengry22@mails.tsinghua.edu.cn>`是郑睿阳。

@@ -679,7 +679,7 @@ void save(const char *path) {
     for (int i = 0; i < brickCount; i++) {
 
         if (robot < bricks[i] && !robotDrawn) {
-        //if (true) {
+            //if (true) {
 
             drawRobot();
             robotDrawn = true;
@@ -702,33 +702,33 @@ void save(const char *path) {
     }
     for (int X = 1; X < IMAGE_WIDTH - 1; X++) {
         for (int Y = 1; Y < IMAGE_HEIGHT - 1; Y++) {
-            pixelChart[X][Y].colorB = (temp[X-1][Y-1].colorB +
-                                       temp[X-1][Y].colorB +
-                                       temp[X-1][Y+1].colorB +
-                                       temp[X][Y-1].colorB +
+            pixelChart[X][Y].colorB = (temp[X - 1][Y - 1].colorB +
+                                       temp[X - 1][Y].colorB +
+                                       temp[X - 1][Y + 1].colorB +
+                                       temp[X][Y - 1].colorB +
                                        temp[X][Y].colorB +
-                                       temp[X][Y+1].colorB +
-                                       temp[X+1][Y-1].colorB +
-                                       temp[X+1][Y].colorB +
-                                       temp[X+1][Y+1].colorB) / 9;
-            pixelChart[X][Y].colorG = (temp[X-1][Y-1].colorG +
-                                       temp[X-1][Y].colorG +
-                                       temp[X-1][Y+1].colorG +
-                                       temp[X][Y-1].colorG +
+                                       temp[X][Y + 1].colorB +
+                                       temp[X + 1][Y - 1].colorB +
+                                       temp[X + 1][Y].colorB +
+                                       temp[X + 1][Y + 1].colorB) / 9;
+            pixelChart[X][Y].colorG = (temp[X - 1][Y - 1].colorG +
+                                       temp[X - 1][Y].colorG +
+                                       temp[X - 1][Y + 1].colorG +
+                                       temp[X][Y - 1].colorG +
                                        temp[X][Y].colorG +
-                                       temp[X][Y+1].colorG +
-                                       temp[X+1][Y-1].colorG +
-                                       temp[X+1][Y].colorG +
-                                       temp[X+1][Y+1].colorG) / 9;
-            pixelChart[X][Y].colorR = (temp[X-1][Y-1].colorR +
-                                       temp[X-1][Y].colorR +
-                                       temp[X-1][Y+1].colorR +
-                                       temp[X][Y-1].colorR +
+                                       temp[X][Y + 1].colorG +
+                                       temp[X + 1][Y - 1].colorG +
+                                       temp[X + 1][Y].colorG +
+                                       temp[X + 1][Y + 1].colorG) / 9;
+            pixelChart[X][Y].colorR = (temp[X - 1][Y - 1].colorR +
+                                       temp[X - 1][Y].colorR +
+                                       temp[X - 1][Y + 1].colorR +
+                                       temp[X][Y - 1].colorR +
                                        temp[X][Y].colorR +
-                                       temp[X][Y+1].colorR +
-                                       temp[X+1][Y-1].colorR +
-                                       temp[X+1][Y].colorR +
-                                       temp[X+1][Y+1].colorR) / 9;
+                                       temp[X][Y + 1].colorR +
+                                       temp[X + 1][Y - 1].colorR +
+                                       temp[X + 1][Y].colorR +
+                                       temp[X + 1][Y + 1].colorR) / 9;
         }
     }
     for (int Y = IMAGE_HEIGHT - 1; Y >= 0; Y--) {
@@ -750,7 +750,7 @@ void save(const char *path) {
 
 void auto_save() {
     // cout << "auto_save called" << endl;
-    if (strcmp(path_of_autosave_on,game.save_path)==0||strcmp(path_of_autosave_off,game.save_path)==0) return;
+    if (strcmp(path_of_autosave_on, game.save_path) == 0 || strcmp(path_of_autosave_off, game.save_path) == 0) return;
     // cout << "auto_save save called" << endl;
     // save(game.save_path);
     string save_path = game.save_path;
@@ -787,7 +787,7 @@ void auto_save() {
     save(p);
     // cout << p << endl;
     game.auto_save_id++;
-    map_info_path=path;
+    map_info_path = path;
 }
 
 
@@ -864,7 +864,7 @@ OpSeq parse(const char *path) {
                     break;
 
                 default:
-                    op = (OpType)(toupper(c[1]) - '0' + CALL);
+                    op = (OpType) (toupper(c[1]) - '0' + CALL);
                     break;
             }
             seq.procs[i].ops[j] = op;
@@ -896,12 +896,12 @@ Result robot_run(const char *path) {
             OpType op = f->p->ops[i];
             switch (op) {
                 case TL:
-                    game.map_run.robot.dir = (Direction)((r.dir + 1) % 4);
+                    game.map_run.robot.dir = (Direction) ((r.dir + 1) % 4);
                     auto_save();
                     break;
 
                 case TR:
-                    game.map_run.robot.dir = (Direction)((r.dir + 3) % 4);
+                    game.map_run.robot.dir = (Direction) ((r.dir + 3) % 4);
                     auto_save();
                     break;
 
@@ -911,7 +911,8 @@ Result robot_run(const char *path) {
                     x += (r.dir - 1) * ((r.dir + 1) % 2);
                     y += -(r.dir - 2) * (r.dir % 2);
                     if (x < 0 || y < 0 || x >= game.map_run.col || y >= game.map_run.row ||
-                        game.map_run.cells[y][x].height != game.map_run.cells[r.pos.y][r.pos.x].height||game.map_run.cells[y][x].height==0) {
+                        game.map_run.cells[y][x].height != game.map_run.cells[r.pos.y][r.pos.x].height ||
+                        game.map_run.cells[y][x].height == 0) {
                         char msg[] = "Robot out of map.";
                         warn(msg);
                         break;
@@ -928,13 +929,13 @@ Result robot_run(const char *path) {
                     x += (r.dir - 1) * ((r.dir + 1) % 2);
                     y += -(r.dir - 2) * (r.dir % 2);
                     if (x < 0 || y < 0 || x >= game.map_run.col || y >= game.map_run.row ||
-                                game.map_run.cells[y][x].height - game.map_run.cells[r.pos.y][r.pos.x].height > 1||game.map_run.cells[y][x].height==0) {
+                        game.map_run.cells[y][x].height - game.map_run.cells[r.pos.y][r.pos.x].height > 1 ||
+                        game.map_run.cells[y][x].height == 0) {
                         char msg[] = "Robot out of map.";
                         warn(msg);
                         break;
                     }
-                    if(game.map_run.cells[y][x].height - game.map_run.cells[r.pos.y][r.pos.x].height==0)
-                    {
+                    if (game.map_run.cells[y][x].height - game.map_run.cells[r.pos.y][r.pos.x].height == 0) {
                         x = r.pos.x;
                         y = r.pos.y;
                         break;
@@ -952,8 +953,8 @@ Result robot_run(const char *path) {
                         for (int l = 0; l < game.map_run.num_lights; l++) {
                             if (game.map_run.lights[l].pos.y == game.map_run.robot.pos.y &&
                                 game.map_run.lights[l].pos.x == game.map_run.robot.pos.x) {
-                                    if (!game.map_run.lights[l].lighten) light_count--;
-                                    break;
+                                if (!game.map_run.lights[l].lighten) light_count--;
+                                break;
                             }
                         }
                         game.map_run.lights[pl - 1].lighten = true;
@@ -991,14 +992,10 @@ Result robot_run(const char *path) {
 }
 
 
-// part 3 - User Interface
-// WIP
-
-
 int main() {
     game.limit = 100;
-    memset(path_of_autosave_on, (int)'!', sizeof(char)*MAX_PATH_LEN);
-    memset(path_of_autosave_off, 0, sizeof(char)*MAX_PATH_LEN);
+    memset(path_of_autosave_on, (int) '!', sizeof(char) * MAX_PATH_LEN);
+    memset(path_of_autosave_off, 0, sizeof(char) * MAX_PATH_LEN);
     //generateMapFile();
     interface();
     return 0;
