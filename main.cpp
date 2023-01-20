@@ -16,8 +16,12 @@ void auto_save();
 
 void save(const char *path);
 
+char path_of_autosave_on[MAX_PATH_LEN];
+char path_of_autosave_off[MAX_PATH_LEN];
+
+
 // part 2 - Execution
-// 执行结果枚举类型 
+// 执行结果枚举类型
 
 Result robot_run(const char *path);
 
@@ -25,8 +29,6 @@ struct Frame;
 struct Stack;
 
 OpSeq parse(const char *path);
-
-
 
 // API Implementation
 
@@ -681,7 +683,6 @@ void save(const char *path) {
             temp[X][Y] = pixelChart[X][Y];
         }
     }
-
     for (int X = 1; X < IMAGE_WIDTH - 1; X++) {
         for (int Y = 1; Y < IMAGE_HEIGHT - 1; Y++) {
             pixelChart[X][Y].colorB = (temp[X-1][Y-1].colorB +
@@ -711,26 +712,28 @@ void save(const char *path) {
                                        temp[X+1][Y-1].colorR +
                                        temp[X+1][Y].colorR +
                                        temp[X+1][Y+1].colorR) / 9;
-
         }
     }
-
     for (int Y = IMAGE_HEIGHT - 1; Y >= 0; Y--) {
-
         for (int X = 0; X < IMAGE_WIDTH; X++) {
-
             mybmp.write((char *) &pixelChart[X][Y], sizeof(Pixel));
-
         }
-
     }
-
     mybmp.close();
-
 }
 
+// void auto_save() {
+
+//     if (strcmp(path_of_autosave_on,game.save_path)==0||strcmp(path_of_autosave_off,game.save_path)==0)
+//     {
+//         return;
+//     }
+//     save(game.save_path);
+// }
+
 void auto_save() {
-    if (!game.save_path[0]) return;
+    if (strcmp(path_of_autosave_on,game.save_path)==0||strcmp(path_of_autosave_off,game.save_path)==0) return;
+    save(game.save_path);
     string save_path = game.save_path;
     int save_id = game.auto_save_id;
     int ptr = 0;
@@ -882,7 +885,7 @@ Result robot_run(const char *path) {
                     x += (r.dir - 1) * ((r.dir + 1) % 2);
                     y += -(r.dir - 2) * (r.dir % 2);
                     if (x < 0 || y < 0 || x >= game.map_run.col || y >= game.map_run.row ||
-                        game.map_run.cells[y][x].height != game.map_run.cells[r.pos.y][r.pos.x].height) {
+                        game.map_run.cells[y][x].height != game.map_run.cells[r.pos.y][r.pos.x].height||game.map_run.cells[y][x].height==0) {
                         char msg[] = "Robot out of map.";
                         warn(msg);
                         break;
@@ -898,10 +901,15 @@ Result robot_run(const char *path) {
                     x += (r.dir - 1) * ((r.dir + 1) % 2);
                     y += -(r.dir - 2) * (r.dir % 2);
                     if (x < 0 || y < 0 || x >= game.map_run.col || y >= game.map_run.row ||
-                        [](int x) { return x > 0 ? x : -x; }(
-                                game.map_run.cells[y][x].height - game.map_run.cells[r.pos.y][r.pos.x].height) != 1) {
+                                game.map_run.cells[y][x].height - game.map_run.cells[r.pos.y][r.pos.x].height > 1||game.map_run.cells[y][x].height==0) {
                         char msg[] = "Robot out of map.";
                         warn(msg);
+                        break;
+                    }
+                    if(game.map_run.cells[y][x].height - game.map_run.cells[r.pos.y][r.pos.x].height==0)
+                    {
+                        x = r.pos.x;
+                        y = r.pos.y;
                         break;
                     }
                     r.pos.x = x;
@@ -950,8 +958,11 @@ Result robot_run(const char *path) {
 // part 3 - User Interface
 // WIP
 
+
 int main() {
     game.limit = 100;
+    memset(path_of_autosave_on, (int)'!', sizeof(char)*MAX_PATH_LEN);
+    memset(path_of_autosave_off, 0, sizeof(char)*MAX_PATH_LEN);
     //generateMapFile();
     interface();
     return 0;

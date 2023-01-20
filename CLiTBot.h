@@ -7,15 +7,15 @@
 #define NONLIGHT_COLOR PURPLEGREY
 #define SPACE " "
 #define MAX_OPS  32
-#define MAX_PROCS  8
-#define MAX_ROW  16
-#define MAX_COL  16
-#define MAX_LIT  16
+#define MAX_PROCS  20
+#define MAX_ROW  200
+#define MAX_COL  200
+#define MAX_LIT  400
 #define MAX_PATH_LEN  512
 #define DEFAULT_B  191
 #define DEFAULT_G  191
 #define DEFAULT_R 191
-#define IMAGE_WIDTH  800
+#define IMAGE_WIDTH                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    800
 #define IMAGE_HEIGHT  600
 #define BASE_POINT_X  399
 #define BASE_POINT_Y  199
