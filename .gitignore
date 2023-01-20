@@ -7,3 +7,5 @@
 
 .vscode/
 tests/case/
+/cmake-build-debug/
+/cmake-build-debug-/
